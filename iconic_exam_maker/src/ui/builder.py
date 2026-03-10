@@ -724,10 +724,21 @@ class ExamBuilder(QWidget):
             "Large":   {"card_w": 240, "thumb_h": 185,  "margins": (8, 8, 8, 8),
                         "topic_w": 185, "order_w": 42, "marks_w": 0},
         }
+        # Hidden snapshot stubs — logic still works, widgets just aren't shown
+        self.snapshot_combo = QComboBox()
+        self.snapshot_combo.hide()
+        self.btn_save_snapshot = QPushButton("Save Snapshot")
+        self.btn_save_snapshot.hide()
+        self.btn_save_snapshot.clicked.connect(self.save_snapshot)
+        self.btn_restore_snapshot = QPushButton("Restore Snapshot")
+        self.btn_restore_snapshot.hide()
+        self.btn_restore_snapshot.clicked.connect(self.restore_selected_snapshot)
+
         self._apply_view_profile("Compact")
         self.load_export_history()
         self.load_design_presets()
         self.refresh_snapshot_list()
+
         self._update_history_buttons()
         self._set_selected_actions_enabled(False)
         self.view_size_combo.currentTextChanged.connect(self.on_design_setting_changed)
