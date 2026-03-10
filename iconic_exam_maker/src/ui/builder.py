@@ -1733,6 +1733,8 @@ class ExamBuilder(QWidget):
                         os.startfile(path)
                     except:
                         pass
+                else:
+                    QMessageBox.warning(self, "Export Failed", f"Failed to save PDF to {path}.\nPlease check if the file is open in another program.")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to generate PDF: {str(e)}")
 
@@ -1756,6 +1758,8 @@ class ExamBuilder(QWidget):
                         os.startfile(path)
                     except:
                         pass
+                else:
+                    QMessageBox.warning(self, "Export Failed", f"Failed to save test PDF to {path}.\nPlease check if the file is open in another program.")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to generate test PDF: {str(e)}")
 
