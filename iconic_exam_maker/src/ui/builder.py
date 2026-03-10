@@ -208,9 +208,9 @@ class ExamBuilder(QWidget):
         toolbar_bar = QWidget()
         toolbar_bar.setObjectName("toolbar")
         toolbar_bar.setStyleSheet(
-            "QWidget#toolbar { background-color: #FFFFFF; border-bottom: 2px solid #D6D6D6; }"
+            "QWidget#toolbar { background-color: #FFFFFF; border-bottom: 1px solid #E0E0E0; }"
         )
-        toolbar_bar.setFixedHeight(62)
+        toolbar_bar.setFixedHeight(72)
         tb_layout = QHBoxLayout(toolbar_bar)
         tb_layout.setContentsMargins(16, 8, 16, 8)
         tb_layout.setSpacing(6)
@@ -229,14 +229,14 @@ class ExamBuilder(QWidget):
         tb_layout.addWidget(sep1)
 
         # PRIMARY: Export PDF (the most-used action)
-        self.btn_export = QPushButton("⬇  Export PDF")
+        self.btn_export = QPushButton("↓  Export\nPDF")
         self.btn_export.setObjectName("success")
-        self.btn_export.setFixedHeight(40)
-        self.btn_export.setMinimumWidth(135)
+        self.btn_export.setFixedHeight(48)
+        self.btn_export.setMinimumWidth(100)
         self.btn_export.setToolTip("Export the full exam paper as PDF  [Ctrl+S]")
         self.btn_export.setStyleSheet(
             "QPushButton { background-color: #1473E6; color: #FFF; border: none;"
-            " border-radius: 4px; font-weight: 700; font-size: 13px; padding: 0 14px; }"
+            " border-radius: 6px; font-weight: 700; font-size: 13px; padding: 4px; }"
             "QPushButton:hover { background-color: #0D66D0; }"
             "QPushButton:pressed { background-color: #0054B6; }"
         )
@@ -245,29 +245,29 @@ class ExamBuilder(QWidget):
 
         # SECONDARY group: Preview / Test / DOCX / Answer Key
         for label, tip, slot in [
-            ("Preview Header", "Preview the header layout only", self.handle_preview_header),
-            ("Test Export",    "Quick PDF with header only",     self.handle_test_export),
-            ("Export DOCX",   "Export as Word document",         self.handle_export_docx),
-            ("Answer Key",    "Export the answer key as PDF",    self.handle_export_key),
+            ("Preview\nHeader", "Preview the header layout only", self.handle_preview_header),
+            ("Test\nExport",    "Quick PDF with header only",     self.handle_test_export),
+            ("Export\nDOCX",   "Export as Word document",         self.handle_export_docx),
+            ("Answer\nKey",    "Export the answer key as PDF",    self.handle_export_key),
         ]:
             btn = QPushButton(label)
-            btn.setFixedHeight(38)
-            btn.setMinimumWidth(110)
+            btn.setFixedHeight(48)
+            btn.setMinimumWidth(80)
             btn.setToolTip(tip)
             btn.clicked.connect(slot)
             btn.setStyleSheet(
-                "QPushButton { background-color: #FFFFFF; color: #333; border: 1px solid #C4C4C4;"
-                " border-radius: 4px; font-weight: 600; font-size: 12px; padding: 0 10px; }"
-                "QPushButton:hover { background-color: #F4F4F4; border-color: #AAAAAA; }"
+                "QPushButton { background-color: #F8F9FA; color: #333; border: none;"
+                " border-radius: 6px; font-weight: 600; font-size: 12px; padding: 4px; }"
+                "QPushButton:hover { background-color: #E9ECEF; }"
             )
             tb_layout.addWidget(btn)
-            if label == "Preview Header":
+            if label == "Preview\nHeader":
                 self.btn_preview = btn
-            elif label == "Test Export":
+            elif label == "Test\nExport":
                 self.btn_test_export = btn
-            elif label == "Export DOCX":
+            elif label == "Export\nDOCX":
                 self.btn_export_docx = btn
-            elif label == "Answer Key":
+            elif label == "Answer\nKey":
                 self.btn_export_key = btn
 
         tb_layout.addStretch()
@@ -310,11 +310,11 @@ class ExamBuilder(QWidget):
         cb_layout.setContentsMargins(12, 6, 12, 6)
         cb_layout.setSpacing(8)
 
-        # Search / filter
+        # Search / filter (restored)
         self.filter_input = QLineEdit()
-        self.filter_input.setPlaceholderText("🔍  Filter by ID or topic…")
-        self.filter_input.setFixedWidth(200)
-        self.filter_input.setFixedHeight(32)
+        self.filter_input.setPlaceholderText("🔍  Filter…")
+        self.filter_input.setFixedWidth(160)
+        self.filter_input.setFixedHeight(30)
         self.filter_input.textChanged.connect(self.apply_filter)
         cb_layout.addWidget(self.filter_input)
 
@@ -440,35 +440,7 @@ class ExamBuilder(QWidget):
         ctrl_sep4.setStyleSheet("color: #C4C4C4;")
         cb_layout.addWidget(ctrl_sep4)
 
-        # Snapshot
-        lbl_snap = QLabel("Snapshot:")
-        lbl_snap.setStyleSheet("font-size: 11px; color: #555; font-weight: 600;")
-        cb_layout.addWidget(lbl_snap)
-        self.snapshot_combo = QComboBox()
-        self.snapshot_combo.setFixedHeight(32)
-        self.snapshot_combo.setMinimumWidth(160)
-        cb_layout.addWidget(self.snapshot_combo)
-
-        for label, tip, slot_name in [
-            ("Save", "Save a snapshot", "save_snapshot"),
-            ("Restore", "Restore selected snapshot", "restore_selected_snapshot"),
-        ]:
-            b = QPushButton(label)
-            b.setFixedHeight(30)
-            b.setMinimumWidth(52)
-            b.setToolTip(tip)
-            b.clicked.connect(getattr(self, slot_name))
-            b.setStyleSheet(
-                "QPushButton { background-color: #FFFFFF; color: #333; border: 1px solid #C4C4C4;"
-                " border-radius: 3px; font-size: 11px; font-weight: 600; }"
-                "QPushButton:hover { background-color: #F4F4F4; }"
-            )
-            cb_layout.addWidget(b)
-            if slot_name == "save_snapshot":
-                self.btn_save_snapshot = b
-            else:
-                self.btn_restore_snapshot = b
-
+        # (Removed Snapshot from this bar to match design)
         cb_layout.addStretch()
         layout.addWidget(ctrl_bar)
 
@@ -485,45 +457,45 @@ class ExamBuilder(QWidget):
         sel_layout.setSpacing(6)
 
         self.lbl_selected = QLabel("No question selected")
-        self.lbl_selected.setStyleSheet("font-size: 12px; color: #717171; font-weight: 600;")
+        self.lbl_selected.setStyleSheet("font-size: 11px; color: #888; font-weight: 700; letter-spacing: 0.3px;")
         sel_layout.addWidget(self.lbl_selected, 1)
 
         action_btns = [
-            ("👁 Preview",  "preview_selected_item",  "#1473E6", "#DDEEFE"),
-            ("✏ Re-Edit",  "adjust_selected_crop",   "#555555", "#EEEEEE"),
-            ("▲ Move Up",  None,                      "#555555", "#EEEEEE"),
-            ("▼ Move Down", None,                     "#555555", "#EEEEEE"),
-            ("✕ Remove",   "remove_selected_item",   "#CC0000", "#FDECEA"),
+            ("👁 PREVIEW",   "preview_selected_item",  "#1473E6", "#DDEEFE"),
+            ("RE-EDIT",      "adjust_selected_crop",   "#333333", "#F0F0F0"),
+            ("▲ MOVE UP",   None,                      "#333333", "#F0F0F0"),
+            ("▼ MOVE DOWN", None,                      "#333333", "#F0F0F0"),
+            ("✕ REMOVE",    "remove_selected_item",    "#CC0000", "#FFF2F2"),
         ]
         for label, slot_name, color, bg in action_btns:
             b = QPushButton(label)
-            b.setFixedHeight(32)
-            b.setMinimumWidth(80)
+            b.setFixedHeight(28)
+            b.setMinimumWidth(74)
             b.setStyleSheet(
                 f"QPushButton {{ background-color: {bg}; color: {color}; border: 1px solid #D6D6D6;"
-                " border-radius: 3px; font-weight: 600; font-size: 12px; }"
+                " border-radius: 4px; font-weight: 700; font-size: 11px; padding: 0 8px; }"
                 f"QPushButton:hover {{ background-color: {color}; color: #FFF; }}"
-                "QPushButton:disabled { color: #AAAAAA; background-color: #F4F4F4; }"
+                "QPushButton:disabled { color: #BBBBBB; background-color: #F8F8F8; border-color: #E8E8E8; }"
             )
             if slot_name:
                 b.clicked.connect(getattr(self, slot_name))
-            if label == "▲ Move Up":
+            if label == "▲ MOVE UP":
                 b.setAutoRepeat(True)
                 b.setAutoRepeatDelay(250)
                 b.setAutoRepeatInterval(70)
                 b.clicked.connect(lambda: self.move_selected_item(-1))
                 self.btn_selected_up = b
-            elif label == "▼ Move Down":
+            elif label == "▼ MOVE DOWN":
                 b.setAutoRepeat(True)
                 b.setAutoRepeatDelay(250)
                 b.setAutoRepeatInterval(70)
                 b.clicked.connect(lambda: self.move_selected_item(1))
                 self.btn_selected_down = b
-            elif label == "👁 Preview":
+            elif label == "👁 PREVIEW":
                 self.btn_selected_preview = b
-            elif label == "✏ Re-Edit":
+            elif label == "RE-EDIT":
                 self.btn_selected_edit = b
-            elif label == "✕ Remove":
+            elif label == "✕ REMOVE":
                 self.btn_selected_delete = b
             sel_layout.addWidget(b)
 
@@ -552,15 +524,15 @@ class ExamBuilder(QWidget):
         self.q_list = QListWidget()
         self.q_list.setDragDropMode(QListWidget.DragDropMode.InternalMove)
         self.q_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
-        self.q_list.setSpacing(8)
-        # Enable 2-column grid-flow mode
+        self.q_list.setSpacing(6)
+        # 4-column grid-flow mode
         self.q_list.setFlow(QListWidget.Flow.LeftToRight)
         self.q_list.setWrapping(True)
         self.q_list.setResizeMode(QListWidget.ResizeMode.Adjust)
         self.q_list.setUniformItemSizes(False)
         self.q_list.setStyleSheet(
-            "QListWidget { background-color: transparent; border: none; outline: none; padding: 8px; }"
-            "QListWidget::item { border-radius: 4px; }"
+            "QListWidget { background-color: #F0F0F0; border: none; outline: none; padding: 8px; }"
+            "QListWidget::item { border-radius: 6px; }"
             "QListWidget::item:selected { background-color: transparent; }"
         )
         self.q_list.setVerticalScrollMode(QListWidget.ScrollMode.ScrollPerPixel)
@@ -743,14 +715,14 @@ class ExamBuilder(QWidget):
         self._state_save_timer.timeout.connect(self._save_builder_state_now)
 
         # card_w is the fixed card width; thumb height set proportionally.
-        # In 2-column grid mode the list area is ~50% of the pane, minus spacing.
+        # 4-column grid: card width ~160–220px fits 4 cards across a typical ~760px pane
         self._view_profiles = {
-            "Compact": {"card_w": 280, "thumb_h": 160,  "margins": (8, 6, 8, 6),
-                        "topic_w": 160, "order_w": 44, "marks_w": 50},
-            "Comfort": {"card_w": 340, "thumb_h": 210,  "margins": (10, 8, 10, 8),
-                        "topic_w": 190, "order_w": 48, "marks_w": 54},
-            "Large":   {"card_w": 420, "thumb_h": 270,  "margins": (12, 10, 12, 10),
-                        "topic_w": 220, "order_w": 52, "marks_w": 58},
+            "Compact": {"card_w": 155, "thumb_h": 115,  "margins": (5, 5, 5, 5),
+                        "topic_w": 120, "order_w": 34, "marks_w": 0},
+            "Comfort": {"card_w": 195, "thumb_h": 145,  "margins": (6, 6, 6, 6),
+                        "topic_w": 155, "order_w": 38, "marks_w": 0},
+            "Large":   {"card_w": 240, "thumb_h": 185,  "margins": (8, 8, 8, 8),
+                        "topic_w": 185, "order_w": 42, "marks_w": 0},
         }
         self._apply_view_profile("Compact")
         self.load_export_history()
@@ -779,8 +751,9 @@ class ExamBuilder(QWidget):
         q_data.setdefault("show_number", True)
 
         item = QListWidgetItem(self.q_list)
-        card_h = self._thumb_h + 90  # image height + bottom strip
-        item.setSizeHint(QSize(self._card_w + 2, card_h))
+        inner_w = self._card_w - self._card_margins[0] - self._card_margins[2]
+        card_h = self._thumb_h + 82   # thumb + badge + topic + strip + spacing
+        item.setSizeHint(QSize(self._card_w + 4, card_h + 4))
         item.setData(Qt.ItemDataRole.UserRole, q_data)
 
         # ── Outer container ───────────────────────────────────────────────────
@@ -788,116 +761,133 @@ class ExamBuilder(QWidget):
         container.setObjectName("card")
         container.setFixedWidth(self._card_w)
         container.setStyleSheet(
-            "QFrame#card { background-color: #FFFFFF; border: 1px solid #D6D6D6;"
-            " border-radius: 6px; }"
+            "QFrame#card { background-color: #FFFFFF; border: 2px solid #E0E0E0;"
+            " border-radius: 8px; }"
             "QFrame#card:hover { border-color: #1473E6; }"
         )
         c_layout = QVBoxLayout(container)
         c_layout.setContentsMargins(*self._card_margins)
         c_layout.setSpacing(4)
 
-        # ── BIG thumbnail ────────────────────────────────────────────────────
+        # ── Thumbnail (full inner width, square-ish) ───────────────────────────
         thumb = QLabel()
         thumb.setObjectName("thumb")
-        thumb.setFixedSize(self._card_w - self._card_margins[0] - self._card_margins[2], self._thumb_h)
+        thumb.setFixedSize(inner_w, self._thumb_h)
         thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         thumb.setStyleSheet(
-            "background-color: #F4F4F4; border: 1px solid #E0E0E0;"
-            " border-radius: 4px;"
+            "background-color: #F0F0F0; border: none; border-radius: 4px;"
         )
         img_path = q_data.get("img_path")
         if img_path and os.path.exists(img_path):
             pix = QPixmap(img_path)
             if not pix.isNull():
-                tw = self._card_w - self._card_margins[0] - self._card_margins[2]
-                thumb.setPixmap(pix.scaled(tw, self._thumb_h,
+                thumb.setPixmap(pix.scaled(inner_w, self._thumb_h,
                                            Qt.AspectRatioMode.KeepAspectRatio,
                                            Qt.TransformationMode.SmoothTransformation))
         c_layout.addWidget(thumb)
 
-        # ── ID + number badge row ─────────────────────────────────────────────
-        id_row = QHBoxLayout()
-        id_row.setContentsMargins(0, 0, 0, 0)
-        id_row.setSpacing(4)
-
-        number_badge = QLabel(f"No. {self.q_list.count():02d}")
-        number_badge.setObjectName("question_num_badge")
-        number_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        number_badge.setFixedHeight(22)
-        number_badge.setMinimumWidth(46)
-        number_badge.setStyleSheet(
-            "background-color: #1473E6; color: #FFFFFF; border-radius: 3px;"
-            " font-weight: 700; font-size: 11px; padding: 0 6px;"
-        )
-        id_row.addWidget(number_badge)
-
-        label = QLabel(f"<b>{q_data.get('id', 'Q')}</b>")
-        label.setStyleSheet("font-size: 11px; color: #555;")
-        id_row.addWidget(label)
-
+        # ── Blue pill badge:  No. 01 Q011 ✓  ─────────────────────────────────
+        num = self.q_list.count()
+        qid = q_data.get('id', 'Q')
         show_num_chk = QCheckBox()
         show_num_chk.setObjectName("show_num_chk")
         show_num_chk.setChecked(bool(q_data.get("show_number", True)))
-        show_num_chk.setToolTip("Show question number in export")
-        show_num_chk.setFixedSize(20, 20)
-        id_row.addWidget(show_num_chk)
-        id_row.addStretch()
-        c_layout.addLayout(id_row)
+
+        pill_row = QHBoxLayout()
+        pill_row.setContentsMargins(0, 0, 0, 0)
+        pill_row.setSpacing(0)
+
+        number_badge = QPushButton(f"No. {num:02d}  {qid}  ✓")
+        number_badge.setObjectName("question_num_badge")
+        number_badge.setCheckable(True)
+        number_badge.setChecked(bool(q_data.get("show_number", True)))
+        number_badge.setFixedHeight(22)
+        number_badge.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        number_badge.setStyleSheet(
+            "QPushButton { background-color: #1473E6; color: #FFF; border-radius: 11px;"
+            "  font-weight: 700; font-size: 10px; padding: 0 8px; border: none; }"
+            "QPushButton:checked { background-color: #1473E6; }"
+            "QPushButton:hover { background-color: #0D66D0; }"
+        )
+        # Toggle the show_number flag on click
+        number_badge.toggled.connect(
+            lambda checked, i=item: (
+                (lambda d: (
+                    d.update({'show_number': checked}),
+                    i.setData(Qt.ItemDataRole.UserRole, d)
+                ))(dict(i.data(Qt.ItemDataRole.UserRole) or {}))
+            )() or None
+        )
+        pill_row.addWidget(number_badge, 1)
+        c_layout.addLayout(pill_row)
 
         # ── Topic input ───────────────────────────────────────────────────────
         topic_edit = QLineEdit(q_data.get('topic', ''))
         topic_edit.setPlaceholderText("Topic")
         topic_edit.setObjectName("topic_edit")
-        topic_edit.setFixedHeight(24)
+        topic_edit.setFixedHeight(22)
         topic_edit.setStyleSheet(
-            "QLineEdit { border: 1px solid #D6D6D6; border-radius: 3px;"
-            " font-size: 11px; padding: 0 4px; background: #FAFAFA; }"
-            "QLineEdit:focus { border-color: #1473E6; background: #FFF; }"
+            "QLineEdit { border: 1px solid #D6D6D6; border-radius: 4px;"
+            " font-size: 10px; padding: 0 4px; background: #FDFDFD; color: #333; }"
+            "QLineEdit:focus { border-color: #1473E6; }"
         )
         c_layout.addWidget(topic_edit)
 
-        # ── Compact bottom strip: order | marks | View ────────────────────────
+        # ── Bottom icon strip: [−] [+] [order#] [🗑] ─────────────────────────
         bottom = QHBoxLayout()
         bottom.setContentsMargins(0, 0, 0, 0)
-        bottom.setSpacing(4)
+        bottom.setSpacing(3)
+
+        btn_style = (
+            "QPushButton { background-color: #F4F4F4; color: #555; border: 1px solid #DCDCDC;"
+            "  border-radius: 4px; font-size: 13px; font-weight: 700; padding: 0; }"
+            "QPushButton:hover { background-color: #E0E0E0; }"
+        )
+        icon_h = 24
+
+        btn_minus = QPushButton("−")
+        btn_minus.setFixedSize(icon_h, icon_h)
+        btn_minus.setStyleSheet(btn_style)
+        btn_minus.setToolTip("Decrease marks")
+        bottom.addWidget(btn_minus)
+
+        btn_plus = QPushButton("+")
+        btn_plus.setFixedSize(icon_h, icon_h)
+        btn_plus.setStyleSheet(btn_style)
+        btn_plus.setToolTip("Increase marks")
+        bottom.addWidget(btn_plus)
 
         order_spin = QSpinBox()
         order_spin.setObjectName("order_spin")
         order_spin.setRange(1, max(1, self.q_list.count()))
         order_spin.setValue(self.q_list.count())
+        order_spin.setFixedHeight(icon_h)
         order_spin.setFixedWidth(self._order_w)
-        order_spin.setFixedHeight(24)
         order_spin.setToolTip("Reorder")
-        order_spin.setStyleSheet("font-size: 11px;")
+        order_spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
+        order_spin.setStyleSheet("font-size: 10px; border: 1px solid #DCDCDC; border-radius: 4px; padding: 0 2px;")
         bottom.addWidget(order_spin)
-
-        marks_spin = QSpinBox()
-        marks_spin.setRange(0, 100)
-        marks_spin.setValue(int(q_data.get('marks', 0)))
-        marks_spin.setFixedWidth(self._marks_w)
-        marks_spin.setFixedHeight(24)
-        marks_spin.setObjectName("marks_spin")
-        marks_spin.setToolTip("Marks")
-        marks_spin.setStyleSheet("font-size: 11px;")
-        marks_spin.setPrefix("✦ ")
-        bottom.addWidget(marks_spin)
 
         bottom.addStretch()
 
-        btn_preview_inline = QPushButton("👁")
-        btn_preview_inline.setFixedSize(28, 24)
-        btn_preview_inline.setToolTip("Preview this question")
-        btn_preview_inline.setStyleSheet(
-            "QPushButton { background-color: #DDEEFE; color: #1473E6; border: 1px solid #B3D4F8;"
-            " border-radius: 3px; font-size: 13px; }"
-            "QPushButton:hover { background-color: #1473E6; color: #FFF; }"
+        btn_delete = QPushButton("🗑")
+        btn_delete.setFixedSize(icon_h, icon_h)
+        btn_delete.setStyleSheet(
+            "QPushButton { background-color: #FFF0F0; color: #CC0000; border: 1px solid #FABBBB;"
+            "  border-radius: 4px; font-size: 12px; }"
+            "QPushButton:hover { background-color: #CC0000; color: #FFF; }"
         )
-        btn_preview_inline.clicked.connect(
-            lambda _checked=False, target=item: self.preview_item(target)
-        )
-        bottom.addWidget(btn_preview_inline)
+        btn_delete.setToolTip("Remove")
+        bottom.addWidget(btn_delete)
 
         c_layout.addLayout(bottom)
+
+        # ── Hidden marks spinbox (data only, no UI) ───────────────────────────
+        marks_spin = QSpinBox()
+        marks_spin.setRange(0, 100)
+        marks_spin.setValue(int(q_data.get('marks', 0)))
+        marks_spin.setObjectName("marks_spin")
+        marks_spin.hide()
 
         def on_topic_changed():
             data = item.data(Qt.ItemDataRole.UserRole) or {}
@@ -938,10 +928,24 @@ class ExamBuilder(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, data)
             self.update_stats()
 
+        def _adjust_marks(delta):
+            data = item.data(Qt.ItemDataRole.UserRole) or {}
+            cur = int(data.get("marks", 0) or 0)
+            new_val = max(0, min(100, cur + delta))
+            if cur == new_val:
+                return
+            self._push_undo_snapshot()
+            data["marks"] = new_val
+            marks_spin.setValue(new_val)
+            item.setData(Qt.ItemDataRole.UserRole, data)
+            self.update_stats()
+
         topic_edit.editingFinished.connect(on_topic_changed)
-        marks_spin.editingFinished.connect(on_marks_changed)
+        marks_spin.valueChanged.connect(on_marks_changed)
         order_spin.valueChanged.connect(on_order_changed)
-        show_num_chk.toggled.connect(on_show_number_changed)
+        btn_minus.clicked.connect(lambda: _adjust_marks(-1))
+        btn_plus.clicked.connect(lambda: _adjust_marks(1))
+        btn_delete.clicked.connect(lambda: self.remove_item(item, confirm=True))
 
         self.q_list.setItemWidget(item, container)
         self.q_list.setCurrentItem(item)
