@@ -216,7 +216,7 @@ class ExamConfigDialog(QDialog):
         config_path = os.path.join("config", "config.json")
         defaults = {
             "subject": "PHYSICS",
-            "exam_series": "Final Semester Assessment",
+            "exam_series": "Final Exam Series",
             "paper_number": "1",
             "duration": "120",
             "paper_code": ["01", "T", "I"],
@@ -361,8 +361,8 @@ class ExamConfigDialog(QDialog):
         pi_layout.addLayout(subject_row)
 
         pi_layout.addWidget(_field_label("Exam Series / Title"))
-        self.series_input = QLineEdit(self.defaults.get("exam_series", "Final Semester Assessment"))
-        self.series_input.setPlaceholderText("e.g. Final Semester Assessment")
+        self.series_input = QLineEdit(self.defaults.get("exam_series", "Final Exam Series"))
+        self.series_input.setPlaceholderText("e.g. Final Exam Series")
         pi_layout.addWidget(self.series_input)
 
         pi_layout.addWidget(_field_label("Paper Code Structure"))
@@ -599,7 +599,7 @@ class ExamConfigDialog(QDialog):
         part_code = self.code3_input.text().strip() or self.defaults.get("part_code", "I") or "I"
         config = {
             "subject":              self.subject_combo.currentText() or "PHYSICS",
-            "exam_series":          self.series_input.text().strip() or "Final Semester Assessment",
+            "exam_series":          self.series_input.text().strip() or "Final Exam Series",
             "paper_number":         self.paper_num_input.text().strip() or "1",
             "duration":             self.duration_input.text().strip() or "120",
             "paper_code_1":         self.code1_input.text().strip() or "01",
