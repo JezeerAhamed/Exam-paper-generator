@@ -21,42 +21,43 @@ QWidget#centralwidget {
 
 /* SIDEBAR - SLEEK ACROBAT GRAY */
 QWidget#sidebar {
-    background-color: #EEEEEE; /* Solid light gray sidebar */
-    min-width: 250px;
-    border-right: 1px solid #D6D6D6; /* Subtle divider */
+    background-color: #F0F2F5; /* Matches reference light gray/blueish */
+    min-width: 260px;
+    max-width: 260px;
+    border-right: 1px solid #E5E7EB; /* Subtle divider */
 }
 
 QLabel#app_title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #333333;
-    letter-spacing: 1px;
-    margin-top: 20px;
-    margin-bottom: 5px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #374151;
+    letter-spacing: 0.5px;
 }
 
 QLabel#version_label {
-    color: #717171; /* Subtle gray */
+    color: #6B7280; /* Subtle gray */
     font-size: 11px;
     margin-bottom: 20px;
+    border-top: 1px solid #E5E7EB;
+    padding-top: 15px;
 }
 
 /* NAVIGATION BUTTONS */
 QPushButton[nav="true"] {
     background-color: transparent;
     border: none;
-    color: #4B4B4B; /* Darker unselected text */
+    color: #4B5563; /* Darker unselected text */
     text-align: left;
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    margin: 2px 8px;
-    border-radius: 4px; /* Flatter, less rounded */
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    margin: 4px 16px;
+    border-radius: 8px; /* Slightly more rounded */
 }
 
 QPushButton[nav="true"]:hover {
-    background-color: #E2E2E2; /* Subtle gray hover */
-    color: #333333;
+    background-color: #E5E7EB; /* Subtle gray hover */
+    color: #111827;
 }
 
 QPushButton[nav="true"]:checked {

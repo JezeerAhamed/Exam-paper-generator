@@ -81,31 +81,32 @@ class MainWindow(QMainWindow):
         self.sidebar_layout.setSpacing(10)
         
         # App Logo / Title
-        logo = QLabel()
-        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo.setFixedHeight(80)
-        logo_path = os.path.join("assets", "logo.png")
-        if os.path.exists(logo_path):
-            pix = QPixmap(logo_path)
-            if not pix.isNull():
-                logo.setPixmap(pix.scaled(120, 60, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
-        self.sidebar_layout.addWidget(logo)
-
+        top_row = QWidget()
+        top_layout = QHBoxLayout(top_row)
+        top_layout.setContentsMargins(16, 10, 16, 0)
+        top_layout.setSpacing(10)
+        
         title = QLabel("ICONIC\nACADEMY")
         title.setObjectName("app_title")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.sidebar_layout.addWidget(title)
         
-        self.sidebar_layout.addSpacing(30)
+        atom_icon = QLabel("⚛️")
+        atom_icon.setStyleSheet("font-size: 28px; color: #789BCC;")
+        
+        top_layout.addWidget(title)
+        top_layout.addWidget(atom_icon)
+        top_layout.addStretch()
+        
+        self.sidebar_layout.addWidget(top_row)
+        self.sidebar_layout.addSpacing(20)
         
         # Navigation Buttons
         self.nav_btns = {}
-        self.add_nav_btn("Dashboard", 0, True)
-        self.add_nav_btn("Import Projects", 1, enabled=False)
-        self.add_nav_btn("Question Bank", 2, enabled=False) 
-        self.add_nav_btn("Review & Edit", 3, enabled=False) 
-        self.add_nav_btn("Paper Builder", 4, enabled=False) 
-        self.add_nav_btn("Settings", 5)
+        self.add_nav_btn("Dashboard", 0, True, icon_text="⏱️")
+        self.add_nav_btn("Import Projects", 1, enabled=False, icon_text="📁")
+        self.add_nav_btn("Question Bank", 2, enabled=False, icon_text="📋") 
+        self.add_nav_btn("Review & Edit", 3, enabled=False, icon_text="📝") 
+        self.add_nav_btn("Paper Builder", 4, enabled=False, icon_text="🛠️") 
+        self.add_nav_btn("Settings", 5, icon_text="⚙️")
         
         self.sidebar_layout.addStretch()
         
@@ -118,8 +119,9 @@ class MainWindow(QMainWindow):
         
         self.main_layout.addWidget(self.sidebar)
 
-    def add_nav_btn(self, text, index, active=False, enabled=True):
-        btn = QPushButton(text)
+    def add_nav_btn(self, text, index, active=False, enabled=True, icon_text=""):
+        display_text = f"  {icon_text}    {text}" if icon_text else text
+        btn = QPushButton(display_text)
         btn.setProperty("nav", "true")
         btn.setCheckable(True)
         if active: btn.setChecked(True)
