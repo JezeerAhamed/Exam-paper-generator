@@ -825,7 +825,6 @@ class ExamBuilder(QWidget):
             d = dict(i.data(Qt.ItemDataRole.UserRole) or {})
             d['show_number'] = checked
             i.setData(Qt.ItemDataRole.UserRole, d)
-            self.save_state()
             
         number_badge.toggled.connect(_on_number_toggled)
         pill_row.addWidget(number_badge, 1)
