@@ -821,14 +821,13 @@ class ExamBuilder(QWidget):
             "QPushButton:hover { background-color: #0D66D0; }"
         )
         # Toggle the show_number flag on click
-        number_badge.toggled.connect(
-            lambda checked, i=item: (
-                (lambda d: (
-                    d.update({'show_number': checked}),
-                    i.setData(Qt.ItemDataRole.UserRole, d)
-                ))(dict(i.data(Qt.ItemDataRole.UserRole) or {}))
-            )() or None
-        )
+        def _on_number_toggled(checked, i=item):
+            d = dict(i.data(Qt.ItemDataRole.UserRole) or {})
+            d['show_number'] = checked
+            i.setData(Qt.ItemDataRole.UserRole, d)
+            self.save_state()
+            
+        number_badge.toggled.connect(_on_number_toggled)
         pill_row.addWidget(number_badge, 1)
         c_layout.addLayout(pill_row)
 
