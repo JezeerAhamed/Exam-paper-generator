@@ -1,0 +1,7 @@
+PySide6
+PyMuPDF
+Pillow
+opencv-python
+numpy
+python-docx
+ultralytics

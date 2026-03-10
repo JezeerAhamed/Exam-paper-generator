@@ -1,0 +1,67 @@
+{
+  "layout_presets": {
+    "physics": {
+      "border_margin_mm": 10.0,
+      "border_radius_pt": 15.0,
+      "border_width_pt": 2.0,
+      "row1_h_mm": 22.0,
+      "logo_w_mm": 50.0,
+      "logo_h_mm": 18.0,
+      "logo_radius_pt": 8.0,
+      "logo_border_pt": 1.0,
+      "logo_inner_pad_pt": 2.0,
+      "logo_inner_radius_pt": 6.0,
+      "logo_inner_border_pt": 0.8,
+      "logo_pad_w_mm": 3.0,
+      "logo_pad_h_mm": 2.0,
+      "num_box_size_mm": 14.0,
+      "num_box_radius_pt": 7.0,
+      "num_box_border_pt": 1.0,
+      "row2_h_mm": 12.0,
+      "lang_box_w_mm": 34.0,
+      "lang_box_radius_pt": 6.0,
+      "lang_box_border_pt": 1.0,
+      "code_base_offset_mm": 14.0,
+      "code_w_mm": 10.0,
+      "code_spacing_mm": 1.5,
+      "code_radius_pt": 6.0,
+      "code_outer_border_pt": 2.0,
+      "code_inner_radius_pt": 4.0,
+      "code_inner_border_pt": 1.0,
+      "time_right_pad_mm": 5.0,
+      "row3_h_mm": 17.0,
+      "const_w_mm": 66.0,
+      "const_radius_pt": 6.0,
+      "const_border_pt": 1.5,
+      "const_row_step_mm": 3.6,
+      "const_desc_x_mm": 3.0,
+      "const_sym_x_mm": 34.0,
+      "const_eq_x_mm": 39.0,
+      "const_val_x_mm": 45.0,
+      "marks_box_w_mm": 10.0,
+      "marks_gap_mm": 4.0,
+      "marks_radius_pt": 6.0,
+      "marks_border_pt": 1.0,
+      "footer_font_size": 9.0,
+      "footer_text_offset_pt": 3.0,
+      "footer_line_gap_pt": 2.0,
+      "footer_side_pad_pt": 10.0
+    }
+  },
+  "ai_detection": {
+    "enabled": true,
+    "model_path": "C:/Users/ACER/Desktop/Project/paper generator/paper cropper ai/runs/detect/train5/weights/best.pt",
+    "confidence_threshold": 0.25
+  },
+  "exam_defaults": {
+    "footer_quote": "Confidence Comes From Preparation",
+    "show_page_numbers": true,
+    "start_question_number": 1,
+    "paper_code": [
+      "01",
+      "T",
+      "I"
+    ],
+    "part_code": "I"
+  }
+}

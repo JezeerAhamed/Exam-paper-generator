@@ -1,0 +1,260 @@
+/* 
+   PREMIUM UI THEME - ICONIC EXAM MAKER
+   Adobe Acrobat DC Pro Aesthetic (Light Mode)
+   Clean, Professional, Flat, High Contrast
+*/
+
+QWidget {
+    font-family: 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+    font-size: 13px; /* Slightly smaller for density */
+    color: #333333; /* Acrobat uses dark grays, not pure black */
+}
+
+/* MAIN WINDOW */
+QMainWindow {
+    background-color: #F8F8F8; /* Light gray background */
+}
+
+QWidget#centralwidget {
+    background-color: #F8F8F8;
+}
+
+/* SIDEBAR - SLEEK ACROBAT GRAY */
+QWidget#sidebar {
+    background-color: #EEEEEE; /* Solid light gray sidebar */
+    min-width: 250px;
+    border-right: 1px solid #D6D6D6; /* Subtle divider */
+}
+
+QLabel#app_title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333333;
+    letter-spacing: 1px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+QLabel#version_label {
+    color: #717171; /* Subtle gray */
+    font-size: 11px;
+    margin-bottom: 20px;
+}
+
+/* NAVIGATION BUTTONS */
+QPushButton[nav="true"] {
+    background-color: transparent;
+    border: none;
+    color: #4B4B4B; /* Darker unselected text */
+    text-align: left;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 2px 8px;
+    border-radius: 4px; /* Flatter, less rounded */
+}
+
+QPushButton[nav="true"]:hover {
+    background-color: #E2E2E2; /* Subtle gray hover */
+    color: #333333;
+}
+
+QPushButton[nav="true"]:checked {
+    background-color: #DDEEFE; /* Acrobat Blue very light background */
+    color: #1473E6; /* Primary Acrobat Blue */
+    font-weight: bold;
+}
+
+QPushButton[nav="true"]:disabled {
+    color: #A0A0A0;
+}
+
+/* CONTENT AREA BOXES / CARDS */
+QFrame#card {
+    background-color: #FFFFFF;
+    border: 1px solid #D6D6D6; /* Crisp, flat border */
+    border-radius: 4px; /* Minimal rounding */
+}
+
+QFrame#card:hover {
+    /* No glowing hover state in this aesthetic, keep it professional */
+    border: 1px solid #AAAAAA; 
+}
+
+/* HEADERS */
+QLabel#header_title {
+    font-size: 24px;
+    font-weight: 600; /* Less heavy than before */
+    color: #333333;
+    margin-bottom: 8px;
+}
+
+/* FORM ELEMENTS */
+QLineEdit, QSpinBox, QComboBox {
+    padding: 6px 10px;
+    border: 1px solid #C4C4C4; /* Simple 1px border */
+    border-radius: 3px;
+    background-color: #FFFFFF;
+    color: #333333;
+}
+
+QLineEdit::placeholder {
+    color: #888888;
+}
+
+QLineEdit:focus, QSpinBox:focus, QComboBox:focus {
+    border: 1px solid #1473E6; /* Acrobat blue highlight constraint */
+    outline: none;
+}
+
+/* PRIMARY ACTION BUTTONS (Acrobat Blue) */
+QPushButton#primary, QPushButton#success {
+    background-color: #1473E6; /* Solid Adobe Blue */
+    color: #FFFFFF;
+    font-weight: 600;
+    border-radius: 16px; /* Keep pill shape for primary actions if desired, or 4px for strict Acrobat */
+    padding: 8px 16px;
+    border: none;
+}
+
+/* Enforce pill shape for main actions, flat for tools */
+QPushButton#primary { border-radius: 4px; }
+QPushButton#success { border-radius: 4px; background-color: #1473E6; } /* Overriding green success to blue aesthetic */
+
+QPushButton#primary:hover, QPushButton#success:hover {
+    background-color: #0D66D0; /* Darker blue on hover */
+}
+QPushButton#primary:pressed, QPushButton#success:pressed {
+    background-color: #0054B6; /* Even darker on press */
+}
+
+QPushButton#primary:disabled, QPushButton#success:disabled {
+    background-color: #B5D4FF; /* Washed out blue */
+    color: #FFFFFF;
+}
+
+/* STANDARD BUTTONS (Outlined/Gray) */
+QPushButton {
+    background-color: #FFFFFF;
+    color: #333333;
+    border: 1px solid #C4C4C4;
+    border-radius: 4px; /* Flat look */
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background-color: #F4F4F4;
+    border-color: #AAAAAA;
+}
+
+QPushButton:pressed {
+    background-color: #EAEAEA;
+    border-color: #888888;
+}
+
+QPushButton:disabled {
+    background-color: #F8F8F8;
+    color: #AAAAAA;
+    border-color: #E0E0E0;
+}
+
+/* GROUP BOXES */
+QGroupBox {
+    border: 1px solid #D6D6D6;
+    border-radius: 4px;
+    margin-top: 14px;
+    padding: 10px;
+    background-color: #FFFFFF;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 8px;
+    padding: 0 4px;
+    color: #555555;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* SCROLLBARS (Thin/Modern) */
+QScrollBar:vertical {
+    border: none;
+    background: #F0F0F0;
+    width: 10px;
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #C1C1C1;
+    min-height: 20px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #A8A8A8;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+/* LISTS & TABLES */
+QListWidget, QTableWidget {
+    background-color: #FFFFFF;
+    border: 1px solid #D6D6D6;
+    border-radius: 4px;
+    outline: none;
+}
+
+QListWidget::item:selected, QTableWidget::item:selected {
+    background-color: #DDEEFE; /* Light blue selection */
+    color: #1473E6; /* Blue text */
+}
+
+QListWidget::item:hover, QTableWidget::item:hover {
+    background-color: #F4F4F4;
+    color: #333333;
+}
+
+QListWidget::item {
+    border-radius: 2px;
+    padding: 4px 8px;
+    border-bottom: 1px solid #F0F0F0;
+}
+
+/* TOOLBAR OR PANEL BACKGROUNDS */
+QWidget#toolbar, QWidget#confirm_panel {
+    background-color: #F4F4F4;
+    border-bottom: 1px solid #D6D6D6;
+}
+
+/* SLIDERS */
+QSlider::groove:horizontal {
+    border: 1px solid #D6D6D6;
+    height: 4px;
+    background: #EEEEEE;
+    border-radius: 2px;
+}
+QSlider::handle:horizontal {
+    background: #FFFFFF;
+    border: 1px solid #A0A0A0;
+    width: 14px;
+    margin: -6px 0;
+    border-radius: 7px;
+}
+QSlider::handle:horizontal:hover {
+    border-color: #1473E6;
+}
+
+/* DIALOGS */
+QDialog, QMessageBox {
+    background-color: #FFFFFF;
+    color: #333333;
+}
+
+QMessageBox QLabel {
+    color: #333333;
+    background: transparent;
+}

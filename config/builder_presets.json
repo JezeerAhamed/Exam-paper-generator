@@ -1,0 +1,9 @@
+{
+  "Default": {
+    "number_style": "01.",
+    "start_number": 1,
+    "gap_mm": 8.0,
+    "reverse_order": true,
+    "view_size": "Comfort"
+  }
+}

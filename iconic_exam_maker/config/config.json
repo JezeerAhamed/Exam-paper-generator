@@ -1,0 +1,30 @@
+{
+  "institute": {
+    "name": "ICONIC ACADEMY",
+    "lecturer_name": "M.M.JEZEER AHAMED",
+    "lecturer_qualification": "B.sc (Engineering)",
+    "lecturer_university": "UOM",
+    "logo_path": "logo.png"
+  },
+  "exam_defaults": {
+    "subject": "PHYSICS",
+    "exam_series": "Final Exam Series",
+    "paper_number": "1",
+    "duration": "01 hour",
+    "paper_code": [
+      "01",
+      "T",
+      "I"
+    ]
+  },
+  "output_dirs": {
+    "questions": "questions",
+    "exam_papers": "exam_papers",
+    "mcqs": "mcqs"
+  },
+  "ai_detection": {
+    "enabled": true,
+    "model_path": "C:/Users/ACER/Desktop/Project/paper generator/paper cropper ai/runs/detect/train5/weights/best.pt",
+    "confidence_threshold": 0.25
+  }
+}
