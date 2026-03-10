@@ -58,8 +58,8 @@ class QuestionCard(QFrame):
         self._apply_card_style()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(8)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(6)
 
         self.img_label = QLabel()
         self.img_label.setFixedSize(228, 150)
@@ -101,32 +101,23 @@ class QuestionCard(QFrame):
         topic.setFixedHeight(30)
         layout.addWidget(topic)
 
-        row_1 = QHBoxLayout()
-        row_1.setSpacing(6)
-
-        self.btn_add = QPushButton("Add to Exam")
-        self.btn_add.setObjectName("primary")
-        self.btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_add.setFixedHeight(32)
-        self.btn_add.setStyleSheet("font-size: 11px; padding: 0px;")
-        self.btn_add.clicked.connect(lambda: self.q_added.emit(self.q_data))
-        row_1.addWidget(self.btn_add)
-        layout.addLayout(row_1)
-
-        row_2 = QHBoxLayout()
-        row_2.setSpacing(6)
-
         self.btn_edit = QPushButton("Edit")
         self.btn_edit.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_edit.setFixedHeight(30)
-        self.btn_edit.setStyleSheet("font-size: 11px; padding: 0px;")
+        self.btn_edit.setStyleSheet(
+            "QPushButton { font-size: 11px; padding: 0px; background-color: #FFFFFF; border: 1px solid #D6D6D6; color: #555555; border-radius: 4px; }"
+            "QPushButton:hover { background-color: #F4F4F4; }"
+        )
         self.btn_edit.clicked.connect(lambda: self.edit_requested.emit(self))
         row_2.addWidget(self.btn_edit)
 
         self.btn_remove = QPushButton("Remove")
         self.btn_remove.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_remove.setFixedHeight(30)
-        self.btn_remove.setStyleSheet("font-size: 11px; padding: 0px; color: #B91C1C;")
+        self.btn_remove.setStyleSheet(
+            "QPushButton { font-size: 11px; padding: 0px; color: #DC2626; background-color: #FFFFFF; border: 1px solid #FECACA; border-radius: 4px; }"
+            "QPushButton:hover { background-color: #FEF2F2; }"
+        )
         self.btn_remove.clicked.connect(lambda: self.remove_requested.emit(self.img_path, self.json_path))
         row_2.addWidget(self.btn_remove)
         layout.addLayout(row_2)
@@ -157,27 +148,27 @@ class QuestionBankBrowser(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(30, 30, 30, 30)
-        layout.setSpacing(16)
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(30, 30, 30, 30)
+        main_layout.setSpacing(24)
 
-        top_layout = QHBoxLayout()
-        top_layout.setSpacing(16)
-
-        controls_widget = QWidget()
-        controls_layout = QVBoxLayout(controls_widget)
-        controls_layout.setContentsMargins(0, 0, 0, 0)
-        controls_layout.setSpacing(12)
+        # Left Column (Controls + Grid)
+        left_col = QWidget()
+        left_layout = QVBoxLayout(left_col)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(16)
 
         header_layout = QHBoxLayout()
         title = QLabel("Question Bank")
         title.setObjectName("header_title")
         header_layout.addWidget(title)
         header_layout.addStretch()
-        controls_layout.addLayout(header_layout)
+        left_layout.addLayout(header_layout)
+        
+        left_layout.addSpacing(10)
 
         action_layout = QHBoxLayout()
-        action_layout.setSpacing(8)
+        action_layout.setSpacing(12)
 
         self.search_bar = QLineEdit()
         self.search_bar.setPlaceholderText("Search by ID or topic...")
@@ -189,74 +180,27 @@ class QuestionBankBrowser(QWidget):
         self.btn_add_all.setObjectName("primary")
         self.btn_add_all.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_add_all.setFixedHeight(40)
+        self.btn_add_all.setFixedWidth(100)
         self.btn_add_all.clicked.connect(self.add_all_questions)
         action_layout.addWidget(self.btn_add_all)
 
         self.btn_remove_all = QPushButton("Remove All")
         self.btn_remove_all.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_remove_all.setFixedHeight(40)
-        self.btn_remove_all.setStyleSheet("color: #B91C1C; font-weight: 700;")
+        self.btn_remove_all.setFixedWidth(110)
+        self.btn_remove_all.setStyleSheet("color: #DC2626; font-weight: 700; border: 1px solid #FECACA; background-color: #FFFFFF;")
         self.btn_remove_all.clicked.connect(self.remove_all_questions)
         action_layout.addWidget(self.btn_remove_all)
-        controls_layout.addLayout(action_layout)
+        left_layout.addLayout(action_layout)
 
         self.bank_stats_label = QLabel("Select a question to preview and edit.")
-        self.bank_stats_label.setStyleSheet("color: #475569; font-size: 12px;")
-        controls_layout.addWidget(self.bank_stats_label)
+        self.bank_stats_label.setStyleSheet("color: #475569; font-size: 13px;")
+        
+        left_layout.addSpacing(15)
+        left_layout.addWidget(self.bank_stats_label)
+        left_layout.addSpacing(10)
 
-        top_layout.addWidget(controls_widget, 1)
-
-        # Top-right: larger preview area
-        self.preview_frame = QFrame()
-        self.preview_frame.setObjectName("card")
-        self.preview_frame.setFixedWidth(560)
-        preview_layout = QVBoxLayout(self.preview_frame)
-        preview_layout.setContentsMargins(12, 12, 12, 12)
-        preview_layout.setSpacing(10)
-
-        self.preview_img = QLabel("No question selected")
-        self.preview_img.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview_img.setFixedSize(536, 300)
-        self.preview_img.setStyleSheet("background-color: #F8FAFC; border-radius: 8px;")
-        preview_layout.addWidget(self.preview_img)
-
-        self.preview_title = QLabel("No selection")
-        self.preview_title.setStyleSheet("font-size: 16px; font-weight: 800; color: #0F172A;")
-        preview_layout.addWidget(self.preview_title)
-
-        self.preview_meta = QLabel("")
-        self.preview_meta.setStyleSheet("color: #475569; font-size: 12px;")
-        self.preview_meta.setWordWrap(True)
-        preview_layout.addWidget(self.preview_meta)
-
-        self.preview_topic = QLabel("")
-        self.preview_topic.setStyleSheet("color: #64748B; font-size: 13px;")
-        self.preview_topic.setWordWrap(True)
-        preview_layout.addWidget(self.preview_topic)
-
-        actions = QHBoxLayout()
-        actions.setSpacing(8)
-        self.btn_preview_large = QPushButton("Open Large Preview")
-        self.btn_preview_large.setFixedHeight(36)
-        self.btn_preview_large.clicked.connect(self.preview_selected_question)
-        actions.addWidget(self.btn_preview_large)
-
-        self.btn_edit_selected = QPushButton("Edit in Review")
-        self.btn_edit_selected.setObjectName("primary")
-        self.btn_edit_selected.setFixedHeight(36)
-        self.btn_edit_selected.clicked.connect(self.edit_selected_question)
-        actions.addWidget(self.btn_edit_selected)
-
-        self.btn_add_selected = QPushButton("Add Selected")
-        self.btn_add_selected.setObjectName("success")
-        self.btn_add_selected.setFixedHeight(36)
-        self.btn_add_selected.clicked.connect(self.add_selected_question)
-        actions.addWidget(self.btn_add_selected)
-        preview_layout.addLayout(actions)
-
-        top_layout.addWidget(self.preview_frame, 0, Qt.AlignmentFlag.AlignTop)
-        layout.addLayout(top_layout)
-
+        # Scroll area for grid
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -269,7 +213,63 @@ class QuestionBankBrowser(QWidget):
         self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         self.scroll.setWidget(self.grid_container)
-        layout.addWidget(self.scroll)
+        left_layout.addWidget(self.scroll, 1)
+
+        main_layout.addWidget(left_col, 1)
+
+        # Right Column (Preview)
+        self.preview_frame = QFrame()
+        self.preview_frame.setObjectName("card")
+        self.preview_frame.setFixedWidth(380)
+        preview_layout = QVBoxLayout(self.preview_frame)
+        preview_layout.setContentsMargins(16, 16, 16, 16)
+        preview_layout.setSpacing(12)
+
+        self.preview_img = QLabel("No question selected")
+        self.preview_img.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview_img.setStyleSheet("background-color: #FFFFFF; border-radius: 8px;")
+        self.preview_img.setMinimumHeight(200)
+        self.preview_img.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        preview_layout.addWidget(self.preview_img, 1)
+
+        self.preview_title = QLabel("No selection")
+        self.preview_title.setStyleSheet("font-size: 18px; font-weight: 800; color: #0F172A; margin-top: 10px;")
+        preview_layout.addWidget(self.preview_title)
+
+        self.preview_meta = QLabel("")
+        self.preview_meta.setStyleSheet("color: #64748B; font-size: 13px; line-height: 1.5;")
+        self.preview_meta.setWordWrap(True)
+        preview_layout.addWidget(self.preview_meta)
+
+        self.preview_topic = QLabel("")
+        self.preview_topic.setStyleSheet("color: #475569; font-size: 13px;")
+        self.preview_topic.setWordWrap(True)
+        preview_layout.addWidget(self.preview_topic)
+        
+        preview_layout.addSpacing(20)
+
+        actions = QHBoxLayout()
+        actions.setSpacing(8)
+        self.btn_preview_large = QPushButton("Open Large Preview")
+        self.btn_preview_large.setFixedHeight(36)
+        self.btn_preview_large.clicked.connect(self.preview_selected_question)
+        actions.addWidget(self.btn_preview_large, 1)
+
+        self.btn_edit_selected = QPushButton("Edit in Review")
+        self.btn_edit_selected.setObjectName("primary")
+        self.btn_edit_selected.setFixedHeight(36)
+        self.btn_edit_selected.clicked.connect(self.edit_selected_question)
+        actions.addWidget(self.btn_edit_selected, 1)
+        preview_layout.addLayout(actions)
+
+        self.btn_add_selected = QPushButton("Add Selected")
+        self.btn_add_selected.setObjectName("primary")
+        self.btn_add_selected.setFixedHeight(40)
+        self.btn_add_selected.clicked.connect(self.add_selected_question)
+        preview_layout.addWidget(self.btn_add_selected)
+
+        main_layout.addWidget(self.preview_frame)
+
         self._set_preview_enabled(False)
 
     def _set_preview_enabled(self, enabled):
@@ -322,10 +322,13 @@ class QuestionBankBrowser(QWidget):
 
         self.preview_title.setText(str(data.get("id", "Unknown")))
         self.preview_meta.setText(
-            f"Marks: {data.get('marks', 0)}\nSource: {data.get('source_pdf', 'Unknown')}\n"
-            f"Page: {data.get('page', '-')}"
+            f"Marks: <span style='color: #333;'>{data.get('marks', 0)}</span><br>"
+            f"Source: <span style='color: #333;'>{data.get('source_pdf', 'Unknown')}</span><br>"
+            f"Page: <span style='color: #333;'>{data.get('page', '-')}</span>"
         )
-        self.preview_topic.setText(f"Topic: {data.get('topic', 'N/A')}")
+        self.preview_meta.setTextFormat(Qt.TextFormat.RichText)
+        self.preview_topic.setText(f"Topic: <span style='color: #333;'>{data.get('topic', 'N/A')}</span>")
+        self.preview_topic.setTextFormat(Qt.TextFormat.RichText)
         if hasattr(self, "bank_stats_label"):
             self.bank_stats_label.setText(
                 f"Selected {data.get('id', 'Question')}  •  Double-click card to open full preview."
