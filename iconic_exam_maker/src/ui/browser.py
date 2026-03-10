@@ -99,8 +99,8 @@ class QuestionCard(QFrame):
         topic = QLabel(topic_text)
         topic.setStyleSheet("color: #7F8C8D; font-size: 11px; border: none;")
         topic.setWordWrap(True)
-        topic.setFixedHeight(30)
-        layout.addWidget(topic)
+        row_2 = QHBoxLayout()
+        row_2.setSpacing(6)
 
         self.btn_edit = QPushButton("Edit")
         self.btn_edit.setCursor(Qt.CursorShape.PointingHandCursor)
