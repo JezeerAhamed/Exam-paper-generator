@@ -717,12 +717,12 @@ class ExamBuilder(QWidget):
         # card_w is the fixed card width; thumb height set proportionally.
         # 4-column grid: card width ~160–220px fits 4 cards across a typical ~760px pane
         self._view_profiles = {
-            "Compact": {"card_w": 155, "thumb_h": 115,  "margins": (5, 5, 5, 5),
-                        "topic_w": 120, "order_w": 34, "marks_w": 0},
-            "Comfort": {"card_w": 195, "thumb_h": 145,  "margins": (6, 6, 6, 6),
-                        "topic_w": 155, "order_w": 38, "marks_w": 0},
-            "Large":   {"card_w": 240, "thumb_h": 185,  "margins": (8, 8, 8, 8),
-                        "topic_w": 185, "order_w": 42, "marks_w": 0},
+            "Compact": {"card_w": 310, "thumb_h": 115,  "margins": (5, 5, 5, 5),
+                        "topic_w": 260, "order_w": 34, "marks_w": 0},
+            "Comfort": {"card_w": 390, "thumb_h": 145,  "margins": (6, 6, 6, 6),
+                        "topic_w": 340, "order_w": 38, "marks_w": 0},
+            "Large":   {"card_w": 480, "thumb_h": 185,  "margins": (8, 8, 8, 8),
+                        "topic_w": 420, "order_w": 42, "marks_w": 0},
         }
         # Hidden snapshot stubs — logic still works, widgets just aren't shown
         self.snapshot_combo = QComboBox()
