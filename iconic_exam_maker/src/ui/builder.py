@@ -808,23 +808,26 @@ class ExamBuilder(QWidget):
         pill_row.setContentsMargins(0, 0, 0, 0)
         pill_row.setSpacing(0)
 
-        number_badge = QPushButton(f"No. {num:02d}  {qid}  ✓")
+        is_checked = bool(q_data.get("show_number", True))
+        number_badge = QPushButton(f"No. {num:02d}  {qid}  " + ("✓" if is_checked else "✕"))
         number_badge.setObjectName("question_num_badge")
         number_badge.setCheckable(True)
-        number_badge.setChecked(bool(q_data.get("show_number", True)))
+        number_badge.setChecked(is_checked)
         number_badge.setFixedHeight(22)
         number_badge.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         number_badge.setStyleSheet(
-            "QPushButton { background-color: #1473E6; color: #FFF; border-radius: 11px;"
+            "QPushButton { background-color: #E2E8F0; color: #64748B; border-radius: 11px;"
             "  font-weight: 700; font-size: 10px; padding: 0 8px; border: none; }"
-            "QPushButton:checked { background-color: #1473E6; }"
-            "QPushButton:hover { background-color: #0D66D0; }"
+            "QPushButton:checked { background-color: #1473E6; color: #FFF; }"
+            "QPushButton:hover { background-color: #CBD5E1; }"
+            "QPushButton:checked:hover { background-color: #0D66D0; }"
         )
         # Toggle the show_number flag on click
-        def _on_number_toggled(checked, i=item):
+        def _on_number_toggled(checked, i=item, btn=number_badge, n=num, q=qid):
             d = dict(i.data(Qt.ItemDataRole.UserRole) or {})
             d['show_number'] = checked
             i.setData(Qt.ItemDataRole.UserRole, d)
+            btn.setText(f"No. {n:02d}  {q}  " + ("✓" if checked else "✕"))
             
         number_badge.toggled.connect(_on_number_toggled)
         pill_row.addWidget(number_badge, 1)
