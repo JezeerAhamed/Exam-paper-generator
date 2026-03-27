@@ -19,9 +19,12 @@ class ProjectManager:
 
     def _load_recents(self):
         try:
-            with open(self.recents_file, 'r') as f:
+            with open(self.recents_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except (FileNotFoundError, PermissionError):
+            return []
+        except json.JSONDecodeError as e:
+            print(f"[project.py] Corrupted recents file: {e}")
             return []
 
     def _save_recents(self, recents):

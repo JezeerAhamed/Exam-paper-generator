@@ -232,34 +232,44 @@ class ExamBuilder(QWidget):
         self.btn_export = QPushButton("↓  Export\nPDF")
         self.btn_export.setObjectName("success")
         self.btn_export.setFixedHeight(48)
-        self.btn_export.setMinimumWidth(100)
+        self.btn_export.setMinimumWidth(110)
         self.btn_export.setToolTip("Export the full exam paper as PDF  [Ctrl+S]")
         self.btn_export.setStyleSheet(
-            "QPushButton { background-color: #1473E6; color: #FFF; border: none;"
-            " border-radius: 6px; font-weight: 700; font-size: 13px; padding: 4px; }"
-            "QPushButton:hover { background-color: #0D66D0; }"
-            "QPushButton:pressed { background-color: #0054B6; }"
+            "QPushButton {"
+            "  background-color: #1D6FEB; color: #FFFFFF;"
+            "  border: none; border-radius: 8px;"
+            "  font-weight: 700; font-size: 13px; padding: 4px 10px;"
+            "}"
+            "QPushButton:hover   { background-color: #1558C0; }"
+            "QPushButton:pressed { background-color: #0D45A0; }"
         )
         self.btn_export.clicked.connect(self.handle_export)
         tb_layout.addWidget(self.btn_export)
 
-        # SECONDARY group: Preview / Test / DOCX / Answer Key
+        # SECONDARY group: Preview / Test / DOCX / Answer Key / Handout
+        _SEC_STYLE = (
+            "QPushButton {"
+            "  background-color: #FFFFFF; color: #1C1C1E;"
+            "  border: 1.5px solid #D1D5DB; border-radius: 8px;"
+            "  font-weight: 600; font-size: 12px; padding: 4px 8px;"
+            "}"
+            "QPushButton:hover   { background-color: #F3F4F6; border-color: #9CA3AF; }"
+            "QPushButton:pressed { background-color: #E5E7EB; }"
+        )
+
         for label, tip, slot in [
-            ("Preview\nHeader", "Preview the header layout only", self.handle_preview_header),
-            ("Test\nExport",    "Quick PDF with header only",     self.handle_test_export),
-            ("Export\nDOCX",   "Export as Word document",         self.handle_export_docx),
-            ("Answer\nKey",    "Export the answer key as PDF",    self.handle_export_key),
+            ("Preview\nHeader", "Preview the header layout only",                   self.handle_preview_header),
+            ("Test\nExport",    "Quick PDF with header only",                       self.handle_test_export),
+            ("Export\nDOCX",    "Export as Word document",                          self.handle_export_docx),
+            ("Answer\nKey",     "Export the answer key as PDF",                     self.handle_export_key),
+            ("Handout\nPDF",    "Export as a unit handout PDF with metallic header", self.handle_export_handout),
         ]:
             btn = QPushButton(label)
             btn.setFixedHeight(48)
-            btn.setMinimumWidth(80)
+            btn.setMinimumWidth(86)
             btn.setToolTip(tip)
             btn.clicked.connect(slot)
-            btn.setStyleSheet(
-                "QPushButton { background-color: #F8F9FA; color: #333; border: none;"
-                " border-radius: 6px; font-weight: 600; font-size: 12px; padding: 4px; }"
-                "QPushButton:hover { background-color: #E9ECEF; }"
-            )
+            btn.setStyleSheet(_SEC_STYLE)
             tb_layout.addWidget(btn)
             if label == "Preview\nHeader":
                 self.btn_preview = btn
@@ -269,6 +279,8 @@ class ExamBuilder(QWidget):
                 self.btn_export_docx = btn
             elif label == "Answer\nKey":
                 self.btn_export_key = btn
+            elif label == "Handout\nPDF":
+                self.btn_export_handout = btn
 
         tb_layout.addStretch()
 
@@ -279,18 +291,22 @@ class ExamBuilder(QWidget):
         tb_layout.addWidget(sep2)
 
         for label, tip, slot_name in [
-            ("↩ Undo", "Undo  Ctrl+Z", "undo_change"),
-            ("↪ Redo", "Redo  Ctrl+Y", "redo_change"),
+            ("↩\nUndo", "Undo  Ctrl+Z", "undo_change"),
+            ("↪\nRedo", "Redo  Ctrl+Y", "redo_change"),
         ]:
             b = QPushButton(label)
-            b.setFixedSize(76, 36)
+            b.setFixedSize(58, 48)
             b.setToolTip(tip)
             b.clicked.connect(getattr(self, slot_name))
             b.setStyleSheet(
-                "QPushButton { background-color: #F4F4F4; color: #555; border: 1px solid #D0D0D0;"
-                " border-radius: 4px; font-weight: 600; font-size: 12px; }"
-                "QPushButton:hover { background-color: #EAEAEA; }"
-                "QPushButton:disabled { color: #BBBBBB; }"
+                "QPushButton {"
+                "  background-color: #FFFFFF; color: #374151;"
+                "  border: 1.5px solid #D1D5DB; border-radius: 8px;"
+                "  font-weight: 700; font-size: 13px;"
+                "}"
+                "QPushButton:hover    { background-color: #F3F4F6; border-color: #9CA3AF; }"
+                "QPushButton:disabled { color: #C0C0C0; border-color: #E5E7EB;"
+                "                       background-color: #F9FAFB; }"
             )
             tb_layout.addWidget(b)
             if slot_name == "undo_change":
@@ -1734,8 +1750,8 @@ class ExamBuilder(QWidget):
                     self.record_export(path)
                     try:
                         os.startfile(path)
-                    except:
-                        pass
+                    except OSError as e:
+                        print(f"[builder.py] Could not open exported PDF {path}: {e}")
                 else:
                     QMessageBox.warning(self, "Export Failed", f"Failed to save PDF to {path}.\nPlease check if the file is open in another program.")
             except Exception as e:
@@ -1759,8 +1775,8 @@ class ExamBuilder(QWidget):
                     self.record_export(path)
                     try:
                         os.startfile(path)
-                    except:
-                        pass
+                    except OSError as e:
+                        print(f"[builder.py] Could not open test PDF {path}: {e}")
                 else:
                     QMessageBox.warning(self, "Export Failed", f"Failed to save test PDF to {path}.\nPlease check if the file is open in another program.")
             except Exception as e:
@@ -1843,8 +1859,8 @@ class ExamBuilder(QWidget):
                 self.record_export(path)
                 try:
                     os.startfile(path)
-                except:
-                    pass
+                except OSError as e:
+                    print(f"[builder.py] Could not open DOCX {path}: {e}")
         except Exception as e:
             QMessageBox.critical(self, "Export Error", f"Failed to generate Word document: {str(e)}")
 
@@ -1865,10 +1881,49 @@ class ExamBuilder(QWidget):
                 self.record_export(path)
                 try:
                     os.startfile(path)
-                except:
-                    pass
+                except OSError as e:
+                    print(f"[builder.py] Could not open answer key {path}: {e}")
         except Exception as e:
             QMessageBox.critical(self, "Export Error", f"Failed: {str(e)}")
+
+    def handle_export_handout(self):
+        """Export the current questions as a unit handout PDF with metallic header."""
+        if self.q_list.count() == 0:
+            QMessageBox.warning(self, "Export Failed", "Please add some questions first.")
+            return
+
+        from src.ui.handout_config_dialog import HandoutConfigDialog
+        from src.backend.handout_layout import HandoutLayoutEngine
+
+        dlg = HandoutConfigDialog(self)
+
+        def on_config_accepted(config):
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Export Handout PDF", "", "PDF Files (*.pdf)"
+            )
+            if not path:
+                return
+
+            questions = [q.get("img_path", "") for q in self.get_questions_in_order()]
+            engine = HandoutLayoutEngine(output_dir=os.path.dirname(path) or "exam_papers")
+            try:
+                result = engine.generate_handout(questions, path, config=config)
+                if result:
+                    QMessageBox.information(self, "Success", f"Handout exported to:\n{path}")
+                    self.record_export(path)
+                    try:
+                        os.startfile(path)
+                    except OSError as e:
+                        print(f"[builder.py] Could not open handout {path}: {e}")
+                else:
+                    QMessageBox.warning(self, "Export Failed",
+                                        f"Failed to save handout to {path}.\n"
+                                        "Please check if the file is open in another program.")
+            except Exception as e:
+                QMessageBox.critical(self, "Export Error", f"Failed to generate handout: {str(e)}")
+
+        dlg.config_accepted.connect(on_config_accepted)
+        dlg.exec()
 
     def load_export_history(self):
         path = os.path.join("config", "export_history.json")

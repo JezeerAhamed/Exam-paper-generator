@@ -726,7 +726,7 @@ class Editor(QWidget):
                 w, h = pil_img.size
                 bytes_per_line = w * 3
                 qimg = QImage(self._img_data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
-                pix = QPixmap.fromImage(qimg)
+                pix = QPixmap.fromImage(qimg.copy())
                 self.page_cache[cache_key] = pix
                 # simple LRU trim
                 if len(self.page_cache) > self.cache_limit:

@@ -38,14 +38,20 @@ class PDFToImageConverter:
             if doc:
                 doc.close()
 
+
     @staticmethod
     def get_page_count(pdf_path):
         """Returns the total number of pages in the PDF."""
         doc = None
         try:
             doc = fitz.open(pdf_path)
-            return len(doc)
-        except:
+            count = len(doc)
+            return count
+        except (FileNotFoundError, PermissionError) as e:
+            print(f"[converter.py] Cannot open PDF {pdf_path}: {e}")
+            return 0
+        except Exception as e:
+            print(f"[converter.py] Unexpected error reading {pdf_path}: {e}")
             return 0
         finally:
             if doc:

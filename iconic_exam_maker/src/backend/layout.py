@@ -53,7 +53,8 @@ class FWCLayoutEngine:
             f_q_num = ImageFont.truetype("timesbd.ttf", 40)     
             f_page = ImageFont.truetype("times.ttf", 25)
             f_part = ImageFont.truetype("timesbd.ttf", 35)      
-        except:
+        except OSError as e:
+            print(f"[layout.py] Font loading failed: {e}. Falling back to default font.")
             f_inst_main = f_inst_sub = f_title = f_subject = f_box_text = f_q_num = f_page = f_part = ImageFont.load_default()
 
         pages = []

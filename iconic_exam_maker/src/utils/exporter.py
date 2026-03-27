@@ -83,7 +83,14 @@ class PDFExporter:
                     # Convert JSON {Subject: {sinhala: x, tamil: y}} to format
                     loaded_map = {}
                     for subj, trans in data.items():
-                        loaded_map[subj.upper()] = (trans.get("sinhala", ""), trans.get("tamil", ""))
+                        sinhala = trans.get("sinhala", "").strip()
+                        tamil = trans.get("tamil", "").strip()
+                        # Fall back to defaults if empty
+                        def_sinhala, def_tamil = default_map.get(subj.upper(), ("", ""))
+                        loaded_map[subj.upper()] = (
+                            sinhala if sinhala else def_sinhala,
+                            tamil if tamil else def_tamil
+                        )
                     return loaded_map
         except Exception as e:
             print(f"Error loading subjects.json: {e}")

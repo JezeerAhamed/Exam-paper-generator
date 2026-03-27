@@ -18,14 +18,13 @@ class FileCard(QFrame):
             doc = fitz.open(path)
             self.page_count = len(doc)
             doc.close()
-        except:
+        except (FileNotFoundError, PermissionError) as e:
             self.page_count = 0
-            self.status = "Error"
+            self.status = f"Error: {e}"
+        except Exception as e:
+            self.page_count = 0
+            self.status = f"Error: {e}"
 
-        self.init_ui()
-
-    def init_ui(self):
-        self.setFixedHeight(80)
         self.setStyleSheet("""
             QFrame {
                 background-color: white;

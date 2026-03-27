@@ -31,7 +31,11 @@ class DetectionWorker(QThread):
                     total_pages_across_all += count
                     file_page_counts.append(count)
                     d.close()
-                except:
+                except (FileNotFoundError, PermissionError) as e:
+                    print(f"[workers.py] Cannot open file {path}: {e}")
+                    file_page_counts.append(0)
+                except Exception as e:
+                    print(f"[workers.py] Unexpected error opening {path}: {e}")
                     file_page_counts.append(0)
 
             pages_processed = 0
