@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from PySide6.QtCore import QThread, Signal
 import fitz
 import os
+import traceback
 from PIL import Image
 from src.backend.detector import AdvancedQuestionDetector, MCQDetector, merge_overlapping_boxes
 from src.backend.image_processor import clean_image, auto_enhance
@@ -11,7 +14,7 @@ class DetectionWorker(QThread):
     finished = Signal(list)  # List of processed data blocks
     error = Signal(str)
 
-    def __init__(self, file_paths, enhance_images=True):
+    def __init__(self, file_paths: list[str], enhance_images: bool = True) -> None:
         super().__init__()
         self.file_paths = file_paths
         self.is_running = True
@@ -101,7 +104,9 @@ class DetectionWorker(QThread):
                     doc.close()
                     
                 except Exception as e:
-                    self.error.emit(f"Failed to process {fname}: {str(e)}")
+                    tb = traceback.format_exc()
+                    print(f"Detection failed for {fname}: {tb}")
+                    self.error.emit(f"{fname}: {str(e)}")
                     # Continue with next file
                     pages_processed += file_page_counts[f_idx]
             
@@ -110,7 +115,6 @@ class DetectionWorker(QThread):
                 self.finished.emit(results)
                 
         except Exception as e:
-            import traceback
             print(traceback.format_exc())
             self.error.emit(str(e))
 

@@ -1,8 +1,15 @@
+from __future__ import annotations
 import fitz
 import os
 import json
 import traceback
+import logging
 from datetime import datetime
+
+_logger = logging.getLogger(__name__)
+
+# Module-level font cache to avoid reloading fonts across exports
+_font_cache: dict = {}
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from docx import Document
 from docx.shared import Inches, Pt
@@ -167,24 +174,33 @@ class PDFExporter:
             return name # System fallback
 
         def get_font(name_pref, size_pt, bold=False):
+            cache_key = (name_pref, size_pt, bold)
+            if cache_key in _font_cache:
+                return _font_cache[cache_key]
+
             size_px = pt_to_px(size_pt)
             font_names = []
             if name_pref: font_names.append(name_pref)
-            
+
             # Append Bundled Names
             if bold:
                 font_names.extend(["arialbd.ttf", "NirmalaB.ttf"])
             else:
                 font_names.extend(["arial.ttf", "Nirmala.ttf"])
-                
+
             for name in font_names:
                 try:
                     # Try bundled path first
                     path = get_font_path(name)
-                    return ImageFont.truetype(path, size_px)
-                except:
+                    font_obj = ImageFont.truetype(path, size_px)
+                    _font_cache[cache_key] = font_obj
+                    return font_obj
+                except (OSError, IOError) as e:
+                    _logger.warning("Font load failed for %s size %s: %s", name, size_pt, e)
                     continue
-            return ImageFont.load_default()
+            result = ImageFont.load_default()
+            _font_cache[cache_key] = result
+            return result
 
         # User's Font Preference
         pref_font_name = config.get("tamil_font", "Latha")
@@ -193,14 +209,16 @@ class PDFExporter:
         def get_sinhala_font(size_pt, bold=False):
             size_px = pt_to_px(size_pt)
             # Priority: Iskoola Pota (Standard Sinhala), Nirmala UI
-            names = ["iskpota.ttf", "Nirmala.ttf"] 
+            names = ["iskpota.ttf", "Nirmala.ttf"]
             if bold: names = ["iskpotab.ttf", "NirmalaB.ttf"]
-            
+
             for name in names:
-                try: 
+                try:
                     path = get_font_path(name)
                     return ImageFont.truetype(path, size_px)
-                except: continue
+                except (OSError, IOError) as e:
+                    _logger.warning("Font load failed for %s size %s: %s", name, size_pt, e)
+                    continue
             return get_font(None, size_pt, bold)
 
         def get_tamil_font(size_pt, bold=False):
@@ -220,10 +238,12 @@ class PDFExporter:
             if bold: names = [pref_file, "lathab.ttf", "vijayab.ttf", "NirmalaB.ttf"]
             
             for name in names:
-                try: 
+                try:
                     path = get_font_path(name)
                     return ImageFont.truetype(path, size_px)
-                except: continue
+                except (OSError, IOError) as e:
+                    _logger.warning("Font load failed for %s size %s: %s", name, size_pt, e)
+                    continue
             return get_font(None, size_pt, bold)
 
         # Load Fonts
@@ -390,7 +410,8 @@ class PDFExporter:
                     lx = logo_x + (logo_w - logo.width) // 2
                     ly = y + (logo_h - logo.height) // 2
                     curr_page.paste(logo, (lx, ly), logo if logo.mode=='RGBA' else None)
-                except: pass
+                except (OSError, IOError, Exception) as e:
+                    _logger.warning("Logo load failed at %s: %s", logo_path, e)
             
             # 3. Series & Number (Right)
             right_margin = PW - BORDER_MARGIN - mm_to_px(5)

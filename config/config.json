@@ -50,7 +50,7 @@
   },
   "ai_detection": {
     "enabled": true,
-    "model_path": "C:/Users/ACER/Desktop/Project/paper generator/paper cropper ai/runs/detect/train5/weights/best.pt",
+    "model_path": "models/question_detector.pt",
     "confidence_threshold": 0.25
   },
   "exam_defaults": {

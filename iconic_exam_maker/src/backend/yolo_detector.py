@@ -5,6 +5,7 @@ Uses YOLOv8m for automatic question detection in PDF pages.
 
 import json
 import os
+import threading
 
 import numpy as np
 from PIL import Image
@@ -12,6 +13,7 @@ from PIL import Image
 YOLO = None
 _YOLO_IMPORT_ATTEMPTED = False
 _YOLO_IMPORT_ERROR = None
+_yolo_import_lock = threading.Lock()
 
 
 def _get_yolo_class():
@@ -22,20 +24,24 @@ def _get_yolo_class():
     if _YOLO_IMPORT_ATTEMPTED:
         return YOLO
 
-    _YOLO_IMPORT_ATTEMPTED = True
-    try:
-        from ultralytics import YOLO as yolo_class
+    with _yolo_import_lock:
+        if _YOLO_IMPORT_ATTEMPTED:
+            return YOLO
 
-        YOLO = yolo_class
-    except KeyboardInterrupt as e:
-        # User interrupted heavy import; continue app without AI.
-        _YOLO_IMPORT_ERROR = e
-        YOLO = None
-        print("Warning: YOLO import interrupted. AI detection disabled for this session.")
-    except Exception as e:
-        _YOLO_IMPORT_ERROR = e
-        YOLO = None
-        print(f"Warning: ultralytics import failed: {e}. AI detection disabled.")
+        _YOLO_IMPORT_ATTEMPTED = True
+        try:
+            from ultralytics import YOLO as yolo_class
+
+            YOLO = yolo_class
+        except KeyboardInterrupt as e:
+            # User interrupted heavy import; continue app without AI.
+            _YOLO_IMPORT_ERROR = e
+            YOLO = None
+            print("Warning: YOLO import interrupted. AI detection disabled for this session.")
+        except Exception as e:
+            _YOLO_IMPORT_ERROR = e
+            YOLO = None
+            print(f"Warning: ultralytics import failed: {e}. AI detection disabled.")
     return YOLO
 
 
@@ -105,6 +111,7 @@ class YOLOQuestionDetector:
             confidence_threshold = self.ai_config.get("confidence_threshold", 0.25)
         self.confidence_threshold = float(confidence_threshold)
 
+        self._inference_lock = threading.Lock()
         self._load_model()
 
     def _resolve_model_path(self, raw_path):
@@ -179,11 +186,12 @@ class YOLOQuestionDetector:
             img_array = image
 
         try:
-            results = self.model.predict(
-                source=img_array,
-                conf=self.confidence_threshold,
-                verbose=False,
-            )
+            with self._inference_lock:
+                results = self.model.predict(
+                    source=img_array,
+                    conf=self.confidence_threshold,
+                    verbose=False,
+                )
 
             detections = []
             for result in results:

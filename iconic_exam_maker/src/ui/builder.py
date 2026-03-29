@@ -1,7 +1,9 @@
 ﻿import os
 import json
-import tempfile
+import logging
 import shutil
+import tempfile
+import traceback
 from datetime import datetime
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QCheckBox,
                                QPushButton, QListWidget, QListWidgetItem, QFrame,
@@ -12,6 +14,10 @@ from PySide6.QtGui import QPixmap, QImage, QShortcut, QKeySequence
 from PIL import Image
 from src.utils.exporter import PDFExporter
 from src.utils.converter import PDFToImageConverter
+from src.utils.log_config import get_logger
+from src.utils.platform_utils import open_path
+
+_logger = get_logger(__name__)
 
 
 class InlineCropAdjustDialog(QDialog):
@@ -182,6 +188,7 @@ class ExamBuilder(QWidget):
         self.selected_questions = []
         self.export_history = []
         self.state_path = os.path.join("config", "builder_state.json")
+        self._recovery_path = os.path.join("config", "builder_recovery.json")
         self.preset_path = os.path.join("config", "builder_presets.json")
         self.snapshot_dir = os.path.join("config", "builder_snapshots")
         self._preview_cache = {"hash": None, "path": None}
@@ -191,7 +198,8 @@ class ExamBuilder(QWidget):
         self._history_limit = 80
         self._suspend_row_move_snapshot = False
         self._live_preview_cache_hash = None
-        self._live_preview_pdf = os.path.join(tempfile.gettempdir(), "iconic_exam_live_preview.pdf")
+        self._tmp_dir = tempfile.mkdtemp(prefix="iconic_exam_")
+        self._live_preview_pdf = os.path.join(self._tmp_dir, "live_preview.pdf")
         self._live_preview_page = 0
         self._live_preview_total = 0
         self.design_presets = {}
@@ -515,6 +523,36 @@ class ExamBuilder(QWidget):
                 self.btn_selected_delete = b
             sel_layout.addWidget(b)
 
+        # Batch action buttons
+        _BATCH_STYLE = (
+            "QPushButton { background-color: #F5F5F5; color: #333333; border: 1px solid #D6D6D6;"
+            " border-radius: 4px; font-weight: 700; font-size: 11px; padding: 0 8px; }"
+            "QPushButton:hover { background-color: #333333; color: #FFF; }"
+        )
+        btn_select_all = QPushButton("Select All")
+        btn_select_all.setFixedHeight(28)
+        btn_select_all.setMinimumWidth(74)
+        btn_select_all.setToolTip("Select all questions (Ctrl+A)")
+        btn_select_all.setStyleSheet(_BATCH_STYLE)
+        btn_select_all.clicked.connect(lambda: self.q_list.selectAll())
+        sel_layout.addWidget(btn_select_all)
+
+        btn_remove_selected = QPushButton("Remove Selected")
+        btn_remove_selected.setFixedHeight(28)
+        btn_remove_selected.setMinimumWidth(100)
+        btn_remove_selected.setToolTip("Remove all selected questions")
+        btn_remove_selected.setStyleSheet(_BATCH_STYLE)
+        btn_remove_selected.clicked.connect(self._batch_remove_selected)
+        sel_layout.addWidget(btn_remove_selected)
+
+        btn_set_marks = QPushButton("Set Marks…")
+        btn_set_marks.setFixedHeight(28)
+        btn_set_marks.setMinimumWidth(80)
+        btn_set_marks.setToolTip("Set marks for all selected questions")
+        btn_set_marks.setStyleSheet(_BATCH_STYLE)
+        btn_set_marks.clicked.connect(self._batch_set_marks)
+        sel_layout.addWidget(btn_set_marks)
+
         layout.addWidget(sel_bar)
 
         # ─────────────────────────────────────────────────────────────────────
@@ -539,7 +577,7 @@ class ExamBuilder(QWidget):
 
         self.q_list = QListWidget()
         self.q_list.setDragDropMode(QListWidget.DragDropMode.InternalMove)
-        self.q_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
+        self.q_list.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
         self.q_list.setSpacing(6)
         # 4-column grid-flow mode
         self.q_list.setFlow(QListWidget.Flow.LeftToRight)
@@ -729,6 +767,11 @@ class ExamBuilder(QWidget):
         self._state_save_timer.setInterval(350)
         self._state_save_timer.setSingleShot(True)
         self._state_save_timer.timeout.connect(self._save_builder_state_now)
+
+        self._recovery_timer = QTimer(self)
+        self._recovery_timer.setInterval(30000)  # 30 seconds
+        self._recovery_timer.timeout.connect(self._save_recovery_file)
+        self._recovery_timer.start()
 
         # card_w is the fixed card width; thumb height set proportionally.
         # 4-column grid: card width ~160–220px fits 4 cards across a typical ~760px pane
@@ -1050,7 +1093,8 @@ class ExamBuilder(QWidget):
         try:
             self._suspend_row_move_snapshot = True
             moved_fast = bool(model.moveRow(QModelIndex(), row, QModelIndex(), destination_row))
-        except Exception:
+        except Exception as e:
+            _logger.warning("Row move failed: %s", e)
             moved_fast = False
         finally:
             self._suspend_row_move_snapshot = False
@@ -1233,7 +1277,8 @@ class ExamBuilder(QWidget):
             if data:
                 try:
                     total_marks += int(data.get("marks", 0) or 0)
-                except Exception:
+                except Exception as e:
+                    _logger.warning("Could not parse marks value: %s", e)
                     total_marks += 0
         
         self.lbl_stats.setText(f"Total Questions: {count} | Total Marks: {total_marks}")
@@ -1391,7 +1436,8 @@ class ExamBuilder(QWidget):
                     raw = json.load(f)
                 if isinstance(raw, dict):
                     presets = raw
-            except Exception:
+            except Exception as e:
+                _logger.warning("Could not load design presets: %s", e)
                 presets = {}
 
         if not presets:
@@ -1499,7 +1545,8 @@ class ExamBuilder(QWidget):
                             "backup_rel_path": os.path.relpath(backup_path, self.snapshot_dir),
                         }
                     )
-                except Exception:
+                except Exception as e:
+                    _logger.warning("Could not backup image %s: %s", img_path, e)
                     continue
             payload["_image_backups"] = image_backups
 
@@ -1566,7 +1613,8 @@ class ExamBuilder(QWidget):
                 backup_path = os.path.join(self.snapshot_dir, rel)
                 if os.path.exists(backup_path):
                     shutil.copy2(backup_path, img_path)
-            except Exception:
+            except Exception as e:
+                _logger.warning("Could not restore snapshot image: %s", e)
                 continue
 
     def _load_default_exam_config(self):
@@ -1590,8 +1638,8 @@ class ExamBuilder(QWidget):
                     config["paper_code_2"] = str(paper_code[1])
                     config["paper_code_3"] = str(paper_code[2])
                 config["part_code"] = str(defaults.get("part_code", config.get("paper_code_3", "I")) or "I")
-            except Exception:
-                pass
+            except Exception as e:
+                _logger.warning("Could not load default exam config: %s", e)
         return config
 
     def _apply_builder_export_options(self, config):
@@ -1665,7 +1713,8 @@ class ExamBuilder(QWidget):
         cache_payload = {"questions": questions, "config": config}
         try:
             cache_hash = json.dumps(cache_payload, ensure_ascii=False, sort_keys=True)
-        except Exception:
+        except Exception as e:
+            _logger.warning("Could not serialize cache hash: %s", e)
             cache_hash = str(datetime.now().timestamp())
 
         needs_render = force or (cache_hash != self._live_preview_cache_hash) or (not os.path.exists(self._live_preview_pdf))
@@ -1689,11 +1738,21 @@ class ExamBuilder(QWidget):
     def _save_builder_state_now(self):
         try:
             os.makedirs("config", exist_ok=True)
-            data = self._capture_state()
-            with open(self.state_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-        except Exception:
-            pass
+            state_data = self._capture_state()
+            tmp_path = self.state_path + ".tmp"
+            try:
+                with open(tmp_path, "w", encoding="utf-8") as f:
+                    json.dump(state_data, f, indent=2, ensure_ascii=False)
+                os.replace(tmp_path, self.state_path)
+            except (OSError, PermissionError) as e:
+                _logger.error("State save failed: %s", e)
+                try:
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+                except OSError:
+                    pass
+        except Exception as e:
+            _logger.warning("Unexpected error in _save_builder_state_now: %s", e)
 
     def load_builder_state(self):
         if not os.path.exists(self.state_path):
@@ -1706,7 +1765,8 @@ class ExamBuilder(QWidget):
                 return False
             self._restore_state(data)
             return True
-        except Exception:
+        except Exception as e:
+            _logger.warning("Could not load builder state: %s", e)
             return False
 
     def get_questions_in_order(self):
@@ -1737,6 +1797,7 @@ class ExamBuilder(QWidget):
         config_dialog = ExamConfigDialog(self)
 
         def on_config_accepted(config):
+            from PySide6.QtWidgets import QProgressDialog
             path, _ = QFileDialog.getSaveFileName(self, "Export Exam PDF", "", "PDF Files (*.pdf)")
             if not path:
                 return
@@ -1744,18 +1805,28 @@ class ExamBuilder(QWidget):
             config = self._apply_builder_export_options(config)
             questions = self.get_questions_in_order()
 
+            progress = QProgressDialog("Generating exam PDF…", "Cancel", 0, 0, self)
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.setMinimumDuration(500)
+            progress.show()
+
             try:
-                if PDFExporter.generate_exam_pdf(questions, path, config=config):
+                result = PDFExporter.generate_exam_pdf(questions, path, config=config)
+                progress.close()
+                if result:
                     QMessageBox.information(self, "Success", f"Exam exported successfully to:\n{path}")
                     self.record_export(path)
                     try:
-                        os.startfile(path)
-                    except OSError as e:
-                        print(f"[builder.py] Could not open exported PDF {path}: {e}")
+                        open_path(path)
+                    except (OSError, Exception) as e:
+                        _logger.warning("Could not open file: %s", e)
                 else:
                     QMessageBox.warning(self, "Export Failed", f"Failed to save PDF to {path}.\nPlease check if the file is open in another program.")
             except Exception as e:
-                QMessageBox.critical(self, "Export Error", f"Failed to generate PDF: {str(e)}")
+                progress.close()
+                _logger.error("Export failed: %s\n%s", e, traceback.format_exc())
+                QMessageBox.critical(self, "Export Failed", f"Could not generate PDF:\n{str(e)}")
+                return
 
         config_dialog.config_accepted.connect(on_config_accepted)
         config_dialog.exec()
@@ -1774,9 +1845,9 @@ class ExamBuilder(QWidget):
                     QMessageBox.information(self, "Success", f"Header test exported to:\n{path}")
                     self.record_export(path)
                     try:
-                        os.startfile(path)
-                    except OSError as e:
-                        print(f"[builder.py] Could not open test PDF {path}: {e}")
+                        open_path(path)
+                    except (OSError, Exception) as e:
+                        _logger.warning("Could not open file: %s", e)
                 else:
                     QMessageBox.warning(self, "Export Failed", f"Failed to save test PDF to {path}.\nPlease check if the file is open in another program.")
             except Exception as e:
@@ -1858,9 +1929,9 @@ class ExamBuilder(QWidget):
                 QMessageBox.information(self, "Success", f"Exam exported successfully to:\n{path}")
                 self.record_export(path)
                 try:
-                    os.startfile(path)
-                except OSError as e:
-                    print(f"[builder.py] Could not open DOCX {path}: {e}")
+                    open_path(path)
+                except (OSError, Exception) as e:
+                    _logger.warning("Could not open file: %s", e)
         except Exception as e:
             QMessageBox.critical(self, "Export Error", f"Failed to generate Word document: {str(e)}")
 
@@ -1880,9 +1951,9 @@ class ExamBuilder(QWidget):
                 QMessageBox.information(self, "Success", f"Answer Key exported to:\n{path}")
                 self.record_export(path)
                 try:
-                    os.startfile(path)
-                except OSError as e:
-                    print(f"[builder.py] Could not open answer key {path}: {e}")
+                    open_path(path)
+                except (OSError, Exception) as e:
+                    _logger.warning("Could not open file: %s", e)
         except Exception as e:
             QMessageBox.critical(self, "Export Error", f"Failed: {str(e)}")
 
@@ -1898,29 +1969,40 @@ class ExamBuilder(QWidget):
         dlg = HandoutConfigDialog(self)
 
         def on_config_accepted(config):
+            from PySide6.QtWidgets import QProgressDialog
             path, _ = QFileDialog.getSaveFileName(
                 self, "Export Handout PDF", "", "PDF Files (*.pdf)"
             )
             if not path:
                 return
 
-            questions = [q.get("img_path", "") for q in self.get_questions_in_order()]
+            questions = self.get_questions_in_order()
             engine = HandoutLayoutEngine(output_dir=os.path.dirname(path) or "exam_papers")
+
+            progress = QProgressDialog("Generating handout PDF…", "Cancel", 0, 0, self)
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.setMinimumDuration(500)
+            progress.show()
+
             try:
                 result = engine.generate_handout(questions, path, config=config)
+                progress.close()
                 if result:
                     QMessageBox.information(self, "Success", f"Handout exported to:\n{path}")
                     self.record_export(path)
                     try:
-                        os.startfile(path)
-                    except OSError as e:
-                        print(f"[builder.py] Could not open handout {path}: {e}")
+                        open_path(path)
+                    except (OSError, Exception) as e:
+                        _logger.warning("Could not open file: %s", e)
                 else:
                     QMessageBox.warning(self, "Export Failed",
                                         f"Failed to save handout to {path}.\n"
                                         "Please check if the file is open in another program.")
             except Exception as e:
-                QMessageBox.critical(self, "Export Error", f"Failed to generate handout: {str(e)}")
+                progress.close()
+                _logger.error("Handout export failed: %s\n%s", e, traceback.format_exc())
+                QMessageBox.critical(self, "Export Failed", f"Could not generate handout PDF:\n{str(e)}")
+                return
 
         dlg.config_accepted.connect(on_config_accepted)
         dlg.exec()
@@ -1931,7 +2013,8 @@ class ExamBuilder(QWidget):
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     self.export_history = json.load(f)
-            except Exception:
+            except Exception as e:
+                _logger.warning("Could not load export history: %s", e)
                 self.export_history = []
         self.update_export_ui()
 
@@ -1959,11 +2042,97 @@ class ExamBuilder(QWidget):
         last = self.export_history[0].get("path")
         if last and os.path.exists(last):
             try:
-                os.startfile(last)
-            except Exception:
+                open_path(last)
+            except (OSError, Exception) as e:
+                _logger.warning("Could not open file: %s", e)
                 QMessageBox.warning(self, "Open Failed", "Could not open the last export.")
 
+    def closeEvent(self, event):
+        """Clean up temp directory and remove recovery file on clean exit."""
+        # Clean up temp directory
+        try:
+            shutil.rmtree(self._tmp_dir, ignore_errors=True)
+        except Exception as e:
+            _logger.warning("Could not clean up temp directory: %s", e)
+        # Remove recovery file on clean exit
+        try:
+            if os.path.exists(self._recovery_path):
+                os.remove(self._recovery_path)
+        except OSError:
+            pass
+        super().closeEvent(event)
+
+    def _save_recovery_file(self) -> None:
+        """Write a recovery snapshot every 30 seconds to guard against crashes."""
+        try:
+            state = self._capture_state() if hasattr(self, '_capture_state') else None
+            if state is None:
+                return
+            tmp = self._recovery_path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+            os.replace(tmp, self._recovery_path)
+        except Exception as e:
+            _logger.warning("Recovery save failed: %s", e)
+
+    def _batch_remove_selected(self) -> None:
+        """Remove all currently selected questions after confirmation."""
+        selected = self.q_list.selectedItems()
+        if not selected:
+            return
+        if len(selected) > 1:
+            res = QMessageBox.question(
+                self,
+                "Remove Questions",
+                f"Remove {len(selected)} selected questions?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if res != QMessageBox.StandardButton.Yes:
+                return
+        self._push_undo_snapshot()
+        for item in list(selected):
+            row = self.q_list.row(item)
+            self.q_list.takeItem(row)
+        self.update_stats() if hasattr(self, 'update_stats') else None
+
+    def _batch_set_marks(self) -> None:
+        """Set marks for all selected questions."""
+        selected = self.q_list.selectedItems()
+        if not selected:
+            return
+        val, ok = QInputDialog.getInt(self, "Set Marks", "Marks for selected questions:", 1, 0, 100)
+        if not ok:
+            return
+        for item in selected:
+            widget = self.q_list.itemWidget(item)
+            if widget is None:
+                continue
+            for spin in widget.findChildren(QSpinBox):
+                if spin.objectName() == "marks_spin":
+                    spin.setValue(val)
+                    break
+        self._push_undo_snapshot() if hasattr(self, '_push_undo_snapshot') else None
+
     def on_show(self):
+        # Check for crash recovery file
+        if os.path.exists(self._recovery_path) and os.path.exists(self.state_path):
+            try:
+                rts = os.path.getmtime(self._recovery_path)
+                sts = os.path.getmtime(self.state_path)
+                if rts > sts + 5:  # recovery is >5 seconds newer
+                    from PySide6.QtWidgets import QMessageBox
+                    res = QMessageBox.question(
+                        self, "Crash Recovery",
+                        "A recovery file was found from a previous session that ended unexpectedly.\n\nWould you like to restore from it?",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.Yes,
+                    )
+                    if res == QMessageBox.StandardButton.Yes:
+                        import shutil as _sh
+                        _sh.copy2(self._recovery_path, self.state_path)
+            except OSError:
+                pass
+
         if self.q_list.count() == 0 and os.path.exists(self.state_path):
             res = QMessageBox.question(
                 self,

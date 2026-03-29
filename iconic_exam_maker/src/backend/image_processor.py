@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import cv2
 import numpy as np
 from PIL import Image
 
 
-def clean_image(pil_image):
+def clean_image(pil_image: Image.Image) -> Image.Image:
     """
     Enhance the image: Deskew, Contrast, Denoise.
     Ported from R&D version for high-quality question extraction.
@@ -48,7 +50,7 @@ def clean_image(pil_image):
     return Image.fromarray(binary)
 
 
-def auto_enhance(pil_image, aggressive=False):
+def auto_enhance(pil_image: Image.Image, aggressive: bool = False) -> Image.Image:
     """
     Quick enhancement for cropped questions.
     

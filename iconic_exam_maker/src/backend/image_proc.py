@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from PIL import Image
 import cv2
 import numpy as np
 
-def clean_image(pil_image):
+def clean_image(pil_image: Image.Image) -> Image.Image:
     """
     Apply advanced deskewing and denoising to a PIL Image.
     Returns: Cleaned PIL Image

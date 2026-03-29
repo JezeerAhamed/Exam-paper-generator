@@ -1,15 +1,18 @@
 import json
+import logging
 import os
 import tempfile
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFormLayout, QGroupBox, QScrollArea, QWidget, QDoubleSpinBox, QLineEdit,
+    QFormLayout, QGroupBox, QScrollArea, QWidget, QDoubleSpinBox, QSpinBox, QLineEdit,
     QComboBox, QCheckBox
 )
 from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QImage, QPixmap
 from src.utils.exporter import PDFExporter
 from src.utils.converter import PDFToImageConverter
+
+_logger = logging.getLogger(__name__)
 
 CONFIG_PATH = os.path.join("config", "config.json")
 
@@ -90,8 +93,9 @@ class AdvancedSettingsDialog(QDialog):
                 )
                 defaults["layout_defaults"].update(data.get("layout_defaults", {}))
                 defaults["layout_presets"] = data.get("layout_presets", {})
-            except Exception:
-                pass
+                defaults["detection"] = data.get("detection", {})
+            except (OSError, json.JSONDecodeError) as e:
+                _logger.warning("Settings read failed: %s", e)
 
         return defaults
 
@@ -259,6 +263,34 @@ class AdvancedSettingsDialog(QDialog):
             ],
         )
 
+        # Detection Parameters group
+        detection_group = QGroupBox("Detection Parameters")
+        detection_form = QFormLayout(detection_group)
+        detection_form.setSpacing(8)
+
+        self.spin_min_score = QSpinBox()
+        self.spin_min_score.setRange(0, 100)
+        self.spin_min_score.setValue(60)
+        detection_form.addRow("Min detection score:", self.spin_min_score)
+
+        self.spin_mcq_min_w = QSpinBox()
+        self.spin_mcq_min_w.setRange(50, 500)
+        self.spin_mcq_min_w.setValue(200)
+        detection_form.addRow("MCQ min width (px):", self.spin_mcq_min_w)
+
+        self.spin_mcq_min_h = QSpinBox()
+        self.spin_mcq_min_h.setRange(20, 200)
+        self.spin_mcq_min_h.setValue(100)
+        detection_form.addRow("MCQ min height (px):", self.spin_mcq_min_h)
+
+        content_layout.addWidget(detection_group)
+
+        # Load detection values from config
+        detection_cfg = self.defaults.get("detection", {})
+        self.spin_min_score.setValue(detection_cfg.get("min_score", 60))
+        self.spin_mcq_min_w.setValue(detection_cfg.get("mcq_min_w", 200))
+        self.spin_mcq_min_h.setValue(detection_cfg.get("mcq_min_h", 100))
+
         content_layout.addStretch()
         scroll.setWidget(content)
         layout.addWidget(scroll)
@@ -303,7 +335,8 @@ class AdvancedSettingsDialog(QDialog):
             try:
                 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                     data = json.load(f)
-            except Exception:
+            except (OSError, json.JSONDecodeError) as e:
+                _logger.warning("Settings read failed: %s", e)
                 data = {}
 
         data.setdefault("exam_defaults", {})
@@ -312,6 +345,12 @@ class AdvancedSettingsDialog(QDialog):
         data["exam_defaults"]["footer_quote"] = self.quote_input.text().strip() or self.defaults["footer_quote"]
         for key, widget in self.widgets.items():
             data["layout_defaults"][key] = float(widget.value())
+
+        data["detection"] = {
+            "min_score": self.spin_min_score.value(),
+            "mcq_min_w": self.spin_mcq_min_w.value(),
+            "mcq_min_h": self.spin_mcq_min_h.value(),
+        }
 
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -354,8 +393,8 @@ class AdvancedSettingsDialog(QDialog):
                     pix.scaled(self.preview_label.width(), self.preview_label.height(),
                                Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            _logger.warning("Settings read failed: %s", e)
 
     def apply_search_filter(self, text):
         term = text.strip().lower()
@@ -391,7 +430,8 @@ class AdvancedSettingsDialog(QDialog):
             try:
                 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                     data = json.load(f)
-            except Exception:
+            except (OSError, json.JSONDecodeError) as e:
+                _logger.warning("Settings read failed: %s", e)
                 data = {}
         data.setdefault("layout_presets", {})
         data["layout_presets"][name] = {k: float(w.value()) for k, w in self.widgets.items()}

@@ -44,12 +44,25 @@ Quick usage
     }
     pdf_path = engine.generate_handout(questions, "output.pdf", config)
 """
+from __future__ import annotations
 
 import os
 import math
 from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
+
+# ── layout constants ────────────────────────────────────────────────────────
+_DIVIDER_WIDTH_PX       = 3      # px — header/content separator line width
+_HEADER_GAP_MM          = 4.0    # mm — gap above/below header divider
+_QUESTION_GAP_MM        = 5.0    # mm — vertical gap between questions
+_PAGE_BOTTOM_MARGIN_MM  = 12.0   # mm — footer clearance
+_NEWPAGE_TOP_MM         = 6.0    # mm — top margin on continuation pages
+_QNUM_NUDGE_PX          = 6      # px — vertical nudge for question number label
+_BORDER_OUTER_INSET_PX  = 20     # px — outer border inset from margin
+_BORDER_INNER_INSET_PX  = 5      # px — inner border inset from margin
+_BORDER_OUTER_WIDTH_PX  = 7      # px — outer border line width
+_BORDER_INNER_WIDTH_PX  = 2      # px — inner border line width
 
 
 class HandoutLayoutEngine:
@@ -73,6 +86,8 @@ class HandoutLayoutEngine:
 
     _LEFT_FRAC  = 0.68  # fraction of usable width for the left column
 
+    _font_cache: dict = {}
+
     def __init__(self, output_dir: str = "exam_papers"):
         self.output_dir = output_dir
         self._font_dir  = os.path.join("assets", "fonts")
@@ -82,9 +97,9 @@ class HandoutLayoutEngine:
     # ══════════════════════════════════════════════════════════════════════
 
     def generate_handout(self,
-                         questions : list,
-                         output_path: str  = None,
-                         config    : dict  = None) -> str | None:
+                         questions: list,
+                         output_path: str = None,
+                         config: dict = None) -> str | None:
         """
         Generate a unit-handout PDF.
 
@@ -109,39 +124,47 @@ class HandoutLayoutEngine:
         curr_page, draw = self._new_page(PW, PH, config)
         hdr_bottom      = self._draw_header(curr_page, draw, config)
 
-        y = hdr_bottom + self._mm(4)
-        draw.line([(M, y), (PW - M, y)], fill=(70, 70, 70), width=3)
-        y += self._mm(4)
+        y = hdr_bottom + self._mm(_HEADER_GAP_MM)
+        draw.line([(M, y), (PW - M, y)], fill=(70, 70, 70), width=_DIVIDER_WIDTH_PX)
+        y += self._mm(_HEADER_GAP_MM)
 
         Q_NUM_X = M + self._Q_NUM_X
         Q_IMG_X = M + self._Q_IMG_X
         Q_MAX_W = PW - Q_IMG_X - M
         f_qnum  = self._font("timesbd.ttf", 14)
 
-        q_paths = []
+        q_items = []
         for item in (questions or []):
-            q_paths.append(item.get("img_path", "") if isinstance(item, dict) else str(item))
+            if isinstance(item, dict):
+                q_items.append(item)
+            else:
+                q_items.append({"img_path": str(item), "show_number": True})
 
-        for i, qp in enumerate(q_paths):
+        for i, qdata in enumerate(q_items):
+            qp = qdata.get("img_path", "") if isinstance(qdata, dict) else str(qdata)
+            show_num = bool(qdata.get("show_number", True)) if isinstance(qdata, dict) else True
             if not qp or not os.path.exists(qp):
                 continue
             img    = Image.open(qp)
             ow, oh = img.size
-            scale  = min(1.0, Q_MAX_W / ow)
+            img_x  = Q_IMG_X if show_num else Q_NUM_X
+            avail_w = PW - img_x - M
+            scale  = min(1.0, avail_w / ow)
             tw, th = int(ow * scale), int(oh * scale)
             if scale < 1.0:
                 img = img.resize((tw, th), Image.Resampling.LANCZOS)
 
-            if y + th + self._mm(5) > PH - M - self._mm(12):
+            if y + th + self._mm(_QUESTION_GAP_MM) > PH - M - self._mm(_PAGE_BOTTOM_MARGIN_MM):
                 self._draw_footer(draw, PW, PH, pg_num, config)
                 pages.append(curr_page)
                 pg_num += 1
                 curr_page, draw = self._new_page(PW, PH, config)
-                y = M + self._mm(6)
+                y = M + self._mm(_NEWPAGE_TOP_MM)
 
-            draw.text((Q_NUM_X, y + 6), f"{i + 1}.", font=f_qnum, fill="black")
-            curr_page.paste(img, (Q_IMG_X, y))
-            y += th + self._mm(5)
+            if show_num:
+                draw.text((Q_NUM_X, y + _QNUM_NUDGE_PX), f"{i + 1}.", font=f_qnum, fill="black")
+            curr_page.paste(img, (img_x, y))
+            y += th + self._mm(_QUESTION_GAP_MM)
 
         self._draw_footer(draw, PW, PH, pg_num, config)
         pages.append(curr_page)
@@ -164,8 +187,8 @@ class HandoutLayoutEngine:
     # ══════════════════════════════════════════════════════════════════════
 
     def _draw_header(self,
-                     page  : Image.Image,
-                     draw  : ImageDraw.ImageDraw,
+                     page_img: Image.Image,
+                     draw: ImageDraw.ImageDraw,
                      config: dict) -> int:
         """Draw the metallic banner. Returns absolute y of the bottom edge."""
 
@@ -231,7 +254,7 @@ class HandoutLayoutEngine:
         if white_bg:
             draw.rectangle([(hx, hy), (hx + hw, hy + hh)], fill=(255, 255, 255))
         else:
-            page.paste(self._metallic_bg(hw, hh), (hx, hy))
+            page_img.paste(self._metallic_bg(hw, hh), (hx, hy))
 
         # ── colours chosen by background mode ─────────────────────────────
         if white_bg:
@@ -250,7 +273,7 @@ class HandoutLayoutEngine:
         # ── thin vertical divider between columns ─────────────────────────
         div_x = hx + left_w
         draw.line(
-            [(div_x, hy + self._mm(4)), (div_x, hy + hh - self._mm(4))],
+            [(div_x, hy + self._mm(_HEADER_GAP_MM)), (div_x, hy + hh - self._mm(_HEADER_GAP_MM))],
             fill=div_col, width=2,
         )
 
@@ -416,10 +439,12 @@ class HandoutLayoutEngine:
 
     def _draw_border(self, draw, pw, ph):
         M = self.MARGIN
-        draw.rectangle([(M - 20, M - 20), (pw - M + 20, ph - M + 20)],
-                        outline="black", width=7)
-        draw.rectangle([(M - 5,  M - 5),  (pw - M + 5,  ph - M + 5)],
-                        outline="black", width=2)
+        draw.rectangle([(M - _BORDER_OUTER_INSET_PX, M - _BORDER_OUTER_INSET_PX),
+                         (pw - M + _BORDER_OUTER_INSET_PX, ph - M + _BORDER_OUTER_INSET_PX)],
+                        outline="black", width=_BORDER_OUTER_WIDTH_PX)
+        draw.rectangle([(M - _BORDER_INNER_INSET_PX, M - _BORDER_INNER_INSET_PX),
+                         (pw - M + _BORDER_INNER_INSET_PX, ph - M + _BORDER_INNER_INSET_PX)],
+                        outline="black", width=_BORDER_INNER_WIDTH_PX)
 
     # ══════════════════════════════════════════════════════════════════════
     #  Unit conversion & font helpers
@@ -433,13 +458,19 @@ class HandoutLayoutEngine:
     def _pt(pt: float) -> int:
         return int(pt * 300 / 72)
 
-    def _font(self, name: str, size_pt: float) -> ImageFont.FreeTypeFont:
+    def _font(self, name: str, size_pt: int) -> object:
+        key = (name, size_pt)
+        if key in HandoutLayoutEngine._font_cache:
+            return HandoutLayoutEngine._font_cache[key]
         px   = self._pt(size_pt)
         path = os.path.join(self._font_dir, name)
         try:
-            return ImageFont.truetype(path if os.path.exists(path) else name, px)
-        except Exception:
-            return ImageFont.load_default()
+            font_obj = ImageFont.truetype(path if os.path.exists(path) else name, px)
+        except (OSError, IOError) as e:
+            print(f"Font {name!r} not found, using default: {e}")
+            font_obj = ImageFont.load_default()
+        HandoutLayoutEngine._font_cache[key] = font_obj
+        return font_obj
 
     def _fit_font_to_width(self, name: str, max_pt: float,
                            text: str, max_px: int) -> ImageFont.FreeTypeFont:
